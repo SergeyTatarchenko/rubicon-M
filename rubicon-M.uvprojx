@@ -403,6 +403,11 @@
           <GroupName>user</GroupName>
           <Files>
             <File>
+              <FileName>FreeRTOSConfig.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\source\user\FreeRTOSConfig.h</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\source\user\main.c</FilePath>
@@ -418,14 +423,19 @@
               <FilePath>.\source\user\global.c</FilePath>
             </File>
             <File>
-              <FileName>FreeRTOSConfig.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\source\user\FreeRTOSConfig.h</FilePath>
-            </File>
-            <File>
               <FileName>user_tasks.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\source\user\user_tasks.c</FilePath>
+            </File>
+            <File>
+              <FileName>serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\user\serial.c</FilePath>
+            </File>
+            <File>
+              <FileName>text.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\source\user\text.h</FilePath>
             </File>
           </Files>
         </Group>

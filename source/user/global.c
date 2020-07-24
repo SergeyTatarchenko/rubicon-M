@@ -11,12 +11,14 @@
 ADDRESS_TypeDef ADRESS;
 MODE_TypeDef MODE;
 OUTPUTS_TypeDef OUTPUTS;
+GONFIG_TypeDef GONFIG;
+ADC_VALUES_TypeDef ADC_VALUES;
 /*----------------------------------------------------------------------*/
 
 /* 
 * bind pin current hardware state with global union ADDRESS
 */
-void GetHwAdrState( ADDRESS_TypeDef* state  )
+void GetHwAdrState( ADDRESS_TypeDef* state )
 {
     uint32_t  temp = GPIOC->IDR;
     temp &= 0x0F; /* from PC0 to PC3 bit mask*/
@@ -42,4 +44,11 @@ void GetHwModeState( MODE_TypeDef *state )
     state->byte |= temp;
 }
 
+/*
+* bind current  output hardware state with global union OUTPUTS
+*/
+void GetHwOutState ( OUTPUTS_TypeDef* state )
+{
+
+}
 /****************************end of file ********************************/

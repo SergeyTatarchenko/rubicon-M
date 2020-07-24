@@ -8,7 +8,24 @@
 #define	USER_TASKS_H_
 /*----------------------------------------------------------------------*/
 #include "global.h"
+#include "RTOS.h"
+#include "serial.h"
+#include "text.h"
 /*----------------------------------------------------------------------*/
+void _task_led(void *pvParameters);
+void _task_state_update(void *pvParameters);
+void _task_service_serial(void *pvParameters);
+
+
+void serial_command_executor (TCmdTypeDef command);
+
+typedef enum
+{
+	NORMAL,
+	PROGRAMMING_SS,
+	PROGRAMMING_RS,
+	DEBUG
+}DEVICE_MODE;
 
 #endif
 /****************************end of file ********************************/

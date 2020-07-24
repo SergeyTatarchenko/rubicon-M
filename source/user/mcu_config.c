@@ -2,7 +2,7 @@
 * File Name          : mcu_config.c
 * Author             : Tatarchenko S.
 * Version            : v 1.0
-* Description        : mcu pins and peripheral low leve configuration
+* Description        : mcu pins and peripheral low level configuration
 *************************************************************************/
 
 #include "mcu_config.h"
@@ -13,6 +13,14 @@
 void sys_init()
 {
     pin_config();
+
+    led_zone_0_alrm_off;
+    led_zone_0_err_off;
+
+    led_zone_1_alrm_off;
+    led_zone_1_err_off;
+    sync_led_off;
+
     peripheral_config();
 }
 
@@ -21,10 +29,77 @@ void sys_init()
 */
 void peripheral_config()
 {
-/*
- ADC channel configuration, 
-*/
+	/*DMA1 clock*/
+	RCC->AHB1ENR|= RCC_AHB1ENR_DMA2EN;
+	
+	DMA2_Stream0->CR = 0;
+	
+	
+	/*memory increment mode enabled,
+	memory\peripheral size size 16 bit
+	circular mode					*/
+	
+	//DMA1_Channel1->CCR |= DMA_CCR1_MINC|DMA_CCR1_PSIZE_0|
+	//					  DMA_CCR1_MSIZE_0|DMA_CCR1_CIRC;
+	/*peripheral address*/
+	//DMA1_Channel1->CPAR |= ADC1_DR_ADDR;
+	/*pointer to memory address*/
+	//DMA1_Channel1->CMAR |= (uint32_t)ADC1_DataArray;
+	/*number of data to transfer*/
+	//DMA1_Channel1->CNDTR = ADC1_BUF_SIZE;
+	/*high priority level */
+///	DMA1_Channel1->CCR |= DMA_CCR1_PL_1;
+	/*Transfer complete interrupt enable */
+//	DMA1_Channel1->CCR |= DMA_CCR1_TCIE;
+	/*DMA1 on*/
+	//DMA1_Channel1->CCR |= DMA_CCR1_EN;
+	
+	/***********************************************************************/
+	/*ADC channel configuration*/
+	/*ch 1,2,4,5,6,7*/
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+	/*scan mode*/
+	ADC1->CR1 |= ADC_CR1_SCAN;
+	/*cont mode,conversion started from SWSTART bit*/
+	ADC1->CR2 |= (ADC_CR2_CONT|ADC_CR2_EXTSEL);
+	/*DMA mode enable*/
+	ADC1->CR2 |=ADC_CR2_DMA;
+	/*Temperature Sensor and VREFINT Enable*/
+	ADC1->SMPR1 |= ADC_SMPR1_SMP16_1;
+	/*ADC sample time  13.5 cycles */
+	ADC1->SMPR2 |= (ADC_SMPR2_SMP0_1|ADC_SMPR2_SMP1_1|ADC_SMPR2_SMP2_1|ADC_SMPR2_SMP3_1|
+					ADC_SMPR2_SMP4_1|ADC_SMPR2_SMP5_1|ADC_SMPR2_SMP6_1|ADC_SMPR2_SMP7_1);
+	/*lenght of channel sequence*/
+	ADC1->SQR1 &= ~ADC_SQR1_L;
+	ADC1->SQR1 |= (num_of_adc_conversion - 1)<<20;
+	/*channel poll sequence*/
+	ADC1->SQR3 |= ((1<<0)|(2<<5)|(4<<10)|(5<<15)|(6<<20)|(7<<25));
+	/*ADC1 on*/
+	ADC1->CR2 |=ADC_CR2_ADON;
+	/***********************************************************************/
+	/*USART3 configuration (serial in/out)*/
+	RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
+	/*1)enable USART*/
+	USART3->CR1 |= (USART_CR1_UE|USART_CR1_TE|USART_CR1_RE|USART_CR1_RXNEIE);
+	/*2)Program the M bit 1 start bit, 8 data bits*/
+	USART3->CR1 &= ~USART_CR1_M;
+	/*3)Program the number of stop bits (2 stop bits)*/
+	USART3->CR2 &= ~USART_CR2_STOP;
+	USART3->CR1 |=USART_CR2_STOP_1;
+	/*19200 baudrate, APB1 clock is 30 MHz*/
+	USART3->BRR = 0x61A;
+	/*USART6 configuration (RS-485)*/
+}
 
+
+/* name: serial_send_byte
+*  descriprion: template for serial port send byte for io implementation
+*/
+void serial_send_byte(const char byte)
+{
+	//while(!(USART3->SR & USART_SR_TC));	 // while flag "transmission complete"
+	while(!(USART3->SR & USART_SR_TXE)); // if flag set "Transmit data register empty"
+	USART3->DR = byte;
 }
 
 /*
@@ -32,6 +107,9 @@ void peripheral_config()
 */
 void pin_config()
 {
+    RCC->AHB1ENR  |= RCC_AHB1ENR_GPIOAEN;
+    RCC->AHB1ENR  |= RCC_AHB1ENR_GPIOBEN;
+    RCC->AHB1ENR  |= RCC_AHB1ENR_GPIOCEN;
 
 /*
  ADDRESS pins, PC0,PC1,PC2,PC3, PA0 

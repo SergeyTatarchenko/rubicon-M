@@ -10,6 +10,11 @@
 /*----------------------------------------------------------------------*/
 #include "mcu_config.h"
 
+
+#define TRUE 1
+#define FALSE 0
+
+#define VERSION	"0.1"
 /*----------------------------------------------------------------------*/
 /* union for manual ADDRESS configuration                               */
 typedef union
@@ -47,16 +52,56 @@ typedef union
     uint8_t byte;
     struct
     {
-        unsigned out_0:1;
-        unsigned out_1:1;
-        unsigned out_2:1;
-        unsigned out_3:1;
+        unsigned zone_0_alarm:1;
+        unsigned zone_0_error:1;
+        unsigned zone_1_alarm:1;
+        unsigned zone_1_error:1;
     }bit;	
 }OUTPUTS_TypeDef;
+/* struct for device STATE implemention                                */
+typedef struct
+{
+	union
+	{
+		uint8_t byte;
+		struct
+		{
+			unsigned RS_485_connected:1;
+			unsigned zone_0_alarm:1;
+			unsigned zone_0_error:1;
+			unsigned zone_1_alarm:1;
+			unsigned zone_1_error:1;
+		}bit;
+	}status;
+}STATE_TypeDef;
+
+/* struct for device general mode and configuration                     */
+typedef struct
+{
+	uint16_t zone_0_treshold;
+	uint16_t zone_1_treshold;
+	uint16_t zone_0_timeint;
+	uint16_t zone_1_timeint;
+	
+}GONFIG_TypeDef;
+
+/* struct for adc values from zone amplifiers                           */
+typedef struct{
+	
+	uint16_t alrm_0; /*ch 1*/
+	uint16_t alrm_1; /*ch 2*/
+	uint16_t sign_0; /*ch 4*/
+	uint16_t sign_1; /*ch 5*/
+	uint16_t sign_2; /*ch 6*/
+	uint16_t sign_3; /*ch 7*/
+	
+}ADC_VALUES_TypeDef;
 /*----------------------------------------------------------------------*/
 extern ADDRESS_TypeDef ADRESS;
 extern MODE_TypeDef MODE;
 extern OUTPUTS_TypeDef OUTPUTS;
+extern GONFIG_TypeDef GONFIG;
+extern ADC_VALUES_TypeDef ADC_VALUES;
 /*----------------------------------------------------------------------*/
 void GetHwAdrState( ADDRESS_TypeDef* state );
 void GetHwModeState( MODE_TypeDef *state );

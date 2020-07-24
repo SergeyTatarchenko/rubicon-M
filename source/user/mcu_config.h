@@ -8,6 +8,7 @@
 #define MCU_CONFIG_H_
 
 #include "stm32f2xx.h"
+#include "serial.h"
 /*----------------------------------------------------------------------*/
 
 /*
@@ -58,7 +59,25 @@ RUBICON revision A0 pinout description:
         RTS - PB12
 
 */
+#define led_zone_0_alrm_off  (GPIOA->BSRR |=GPIO_BSRR_BS_8)
+#define led_zone_0_alrm_on (GPIOA->BSRR |=GPIO_BSRR_BR_8)
 
+#define led_zone_0_err_off  (GPIOA->BSRR |=GPIO_BSRR_BS_9)
+#define led_zone_0_err_on (GPIOA->BSRR |=GPIO_BSRR_BR_9)
+
+#define led_zone_1_alrm_off  (GPIOA->BSRR |=GPIO_BSRR_BS_10)
+#define led_zone_1_alrm_on (GPIOA->BSRR |=GPIO_BSRR_BR_10)
+
+#define led_zone_1_err_off  (GPIOA->BSRR |=GPIO_BSRR_BS_11)
+#define led_zone_1_err_on (GPIOA->BSRR |=GPIO_BSRR_BR_11)
+
+#define sync_led_off (GPIOC->BSRR |=GPIO_BSRR_BS_9)
+#define sync_led_on (GPIOC->BSRR |=GPIO_BSRR_BR_9)
+
+#define service_rts_on (GPIOB->BSRR |=GPIO_BSRR_BS_12)
+#define service_rts_off (GPIOB->BSRR |=GPIO_BSRR_BR_12)
+
+#define num_of_adc_conversion 6
 /*----------------------------------------------------------------------*/
 void pin_config(void);
 void peripheral_config(void);
