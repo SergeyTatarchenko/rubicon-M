@@ -15,18 +15,19 @@
 /*terminal commands version 0.1*/
 
 #define COMMAND_BUF_SIZE 32 /*32 byte */
-#define NUM_OF_COMMANDS		5
+#define NUM_OF_COMMANDS		6
 #define NUM_OF_ARGUMENTS	7
 #define MAX_VALUE_LENGHT	5
 
 /*enum of user commands*/
 typedef enum {
-C_EXIT,
-C_HELP,
-C_SAVE,
-C_SHOW,
-C_SET,
-C_ERROR
+	C_EXIT,
+	C_HELP,
+	C_SAVE,
+	C_SHOW,
+	C_SET,
+	C_DEBUG,
+	C_ERROR
 }COMMANDS;
 
 /*enum of user arguments*/
@@ -38,6 +39,7 @@ typedef enum{
 	A_TRESHOLD2,
 	A_TIMEINT1,
 	A_TIMEINT2,
+	
 	A_ERROR
 }ARGUMENTS;
 

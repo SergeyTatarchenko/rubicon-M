@@ -40,6 +40,8 @@
 #define __SAVE	's','a','v','e'
 #define __SHOW	's','h','o','w'
 #define __SET	's','e','t'
+#define __DEBUG	'd','e','b','u','g'
+
 
 /*arguments*/
 #define __MODE		'm','o','d','e'
@@ -49,6 +51,7 @@
 #define __TRESHOLD2	't','r','e','s','h','o','l','d','2'
 #define __TIMEINT1	't','i','m','e','i','n','t','1'
 #define __TIMEINT2	't','i','m','e','i','n','t','2'
+
 
 
 #endif

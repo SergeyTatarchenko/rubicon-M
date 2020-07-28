@@ -6,22 +6,22 @@
 *************************************************************************/
 
 #include "mcu_config.h"
-
+#include "global.h"
 /*
 * low level microchip init function
 */
 void sys_init()
 {
-    pin_config();
+	pin_config();
+	
+	led_zone_0_alrm_off;
+	led_zone_0_err_off;
+	led_zone_1_alrm_off;
+	led_zone_1_err_off;
+	sync_led_off;
 
-    led_zone_0_alrm_off;
-    led_zone_0_err_off;
-
-    led_zone_1_alrm_off;
-    led_zone_1_err_off;
-    sync_led_off;
-
-    peripheral_config();
+	peripheral_config();
+	ADC_START;
 }
 
 /*
@@ -29,31 +29,26 @@ void sys_init()
 */
 void peripheral_config()
 {
-	/*DMA1 clock*/
+	/*DMA2 clock*/
 	RCC->AHB1ENR|= RCC_AHB1ENR_DMA2EN;
-	
-	DMA2_Stream0->CR = 0;
-	
-	
-	/*memory increment mode enabled,
-	memory\peripheral size size 16 bit
-	circular mode					*/
-	
-	//DMA1_Channel1->CCR |= DMA_CCR1_MINC|DMA_CCR1_PSIZE_0|
-	//					  DMA_CCR1_MSIZE_0|DMA_CCR1_CIRC;
+	/* 
+	stream 0 - channel 0 ADC, high priority,
+	16 bit data transfer, peripheral to memory mode,
+	memory increment mode,circular mode;
+	*/
+	DMA2_Stream0->CR &= ~DMA_SxCR_CHSEL;
+	DMA2_Stream0->CR |= DMA_SxCR_PL_1;
+	DMA2_Stream0->CR |= DMA_SxCR_MSIZE_0|DMA_SxCR_PSIZE_0;
+	DMA2_Stream0->CR &= ~DMA_SxCR_DIR;
+	DMA2_Stream0->CR |= DMA_SxCR_MINC|DMA_SxCR_CIRC;
+	/*setup number of conversions*/
+	DMA2_Stream0->NDTR = num_of_adc_conversion;
 	/*peripheral address*/
-	//DMA1_Channel1->CPAR |= ADC1_DR_ADDR;
-	/*pointer to memory address*/
-	//DMA1_Channel1->CMAR |= (uint32_t)ADC1_DataArray;
-	/*number of data to transfer*/
-	//DMA1_Channel1->CNDTR = ADC1_BUF_SIZE;
-	/*high priority level */
-///	DMA1_Channel1->CCR |= DMA_CCR1_PL_1;
-	/*Transfer complete interrupt enable */
-//	DMA1_Channel1->CCR |= DMA_CCR1_TCIE;
-	/*DMA1 on*/
-	//DMA1_Channel1->CCR |= DMA_CCR1_EN;
-	
+	DMA2_Stream0->PAR = (uint32_t) (&(ADC1->DR));
+	/*memory address*/
+	DMA2_Stream0->M0AR = (uint32_t)&ADC_VALUES;
+	/*enable stream*/
+	DMA2_Stream0->CR |= DMA_SxCR_EN;
 	/***********************************************************************/
 	/*ADC channel configuration*/
 	/*ch 1,2,4,5,6,7*/
@@ -61,11 +56,10 @@ void peripheral_config()
 	/*scan mode*/
 	ADC1->CR1 |= ADC_CR1_SCAN;
 	/*cont mode,conversion started from SWSTART bit*/
-	ADC1->CR2 |= (ADC_CR2_CONT|ADC_CR2_EXTSEL);
+	ADC1->CR2 |= ADC_CR2_CONT;
 	/*DMA mode enable*/
-	ADC1->CR2 |=ADC_CR2_DMA;
-	/*Temperature Sensor and VREFINT Enable*/
-	ADC1->SMPR1 |= ADC_SMPR1_SMP16_1;
+	ADC1->CR2 |= (ADC_CR2_DMA|ADC_CR2_DDS);
+	
 	/*ADC sample time  13.5 cycles */
 	ADC1->SMPR2 |= (ADC_SMPR2_SMP0_1|ADC_SMPR2_SMP1_1|ADC_SMPR2_SMP2_1|ADC_SMPR2_SMP3_1|
 					ADC_SMPR2_SMP4_1|ADC_SMPR2_SMP5_1|ADC_SMPR2_SMP6_1|ADC_SMPR2_SMP7_1);
@@ -75,7 +69,7 @@ void peripheral_config()
 	/*channel poll sequence*/
 	ADC1->SQR3 |= ((1<<0)|(2<<5)|(4<<10)|(5<<15)|(6<<20)|(7<<25));
 	/*ADC1 on*/
-	ADC1->CR2 |=ADC_CR2_ADON;
+	ADC1->CR2 |= ADC_CR2_ADON;
 	/***********************************************************************/
 	/*USART3 configuration (serial in/out)*/
 	RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
@@ -88,6 +82,7 @@ void peripheral_config()
 	USART3->CR1 |=USART_CR2_STOP_1;
 	/*19200 baudrate, APB1 clock is 30 MHz*/
 	USART3->BRR = 0x61A;
+	/***********************************************************************/
 	/*USART6 configuration (RS-485)*/
 }
 
@@ -100,6 +95,46 @@ void serial_send_byte(const char byte)
 	//while(!(USART3->SR & USART_SR_TC));	 // while flag "transmission complete"
 	while(!(USART3->SR & USART_SR_TXE)); // if flag set "Transmit data register empty"
 	USART3->DR = byte;
+}
+
+/* name: flash_data_write
+*  descriprion: write data to stm32 flash memory
+*/
+void flash_data_write(const uint32_t address,int sector, const uint32_t *data,int size)
+{
+	uint32_t *memory_pointer = (uint32_t*)address;
+	while(FLASH->SR&FLASH_SR_BSY);
+	
+	/*flash unlock*/
+	FLASH->KEYR = FLASH_UNLOCK_WORD_1;
+	FLASH->KEYR = FLASH_UNLOCK_WORD_2;
+	/*32 bit parallelism*/
+	FLASH->CR  |= FLASH_CR_PSIZE_1;
+	FLASH->CR  |= FLASH_CR_SER;
+	FLASH->CR  &= ~((uint32_t)0x78);
+	FLASH->CR |= (sector<<3);
+	FLASH->CR |= FLASH_CR_STRT;
+	while(FLASH->SR&FLASH_SR_BSY);
+	for(int i = 0;i < size/4; i++)
+	{
+		*(memory_pointer+i) = data[i];
+		while(FLASH->SR&FLASH_SR_BSY);
+	}
+	/*flash lock*/
+	FLASH->CR  |= FLASH_CR_LOCK;
+}
+
+/* name: flash_data_read
+*  descriprion: copy data from flash to RAM 
+*/
+void flash_data_read(const uint32_t address, uint32_t *data,int size)
+{
+	uint32_t *memory_pointer = (uint32_t*)address;
+	
+	for(int i = 0;i < size/4; i++)
+	{
+		data[i] = *(memory_pointer+i);
+	}
 }
 
 /*

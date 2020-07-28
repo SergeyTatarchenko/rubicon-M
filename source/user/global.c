@@ -11,8 +11,9 @@
 ADDRESS_TypeDef ADRESS;
 MODE_TypeDef MODE;
 OUTPUTS_TypeDef OUTPUTS;
-GONFIG_TypeDef GONFIG;
+CONFIG_TypeDef CONFIG;
 ADC_VALUES_TypeDef ADC_VALUES;
+ADC_CHANNELS_TypeDef ADC_CHANNELS;
 /*----------------------------------------------------------------------*/
 
 /* 

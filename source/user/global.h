@@ -56,7 +56,7 @@ typedef union
         unsigned zone_0_error:1;
         unsigned zone_1_alarm:1;
         unsigned zone_1_error:1;
-    }bit;	
+    }bit;
 }OUTPUTS_TypeDef;
 /* struct for device STATE implemention                                */
 typedef struct
@@ -76,14 +76,25 @@ typedef struct
 }STATE_TypeDef;
 
 /* struct for device general mode and configuration                     */
-typedef struct
+typedef union
 {
+	struct{
+		union{
+			uint16_t byte;
+			struct{
+				unsigned first_startup:1;
+				
+			}bit;
+		}status;
 	uint16_t zone_0_treshold;
 	uint16_t zone_1_treshold;
 	uint16_t zone_0_timeint;
 	uint16_t zone_1_timeint;
-	
-}GONFIG_TypeDef;
+	uint16_t zone_0_triglimit;
+	uint16_t zone_1_triglimit;
+	}data;
+	uint32_t array[8]; /*4*8 data config size */
+}CONFIG_TypeDef;
 
 /* struct for adc values from zone amplifiers                           */
 typedef struct{
@@ -96,15 +107,28 @@ typedef struct{
 	uint16_t sign_3; /*ch 7*/
 	
 }ADC_VALUES_TypeDef;
+
+/* struct for adc debug output through serial port                      */
+typedef struct {
+	
+	char ch_1[4];
+	char ch_2[4];
+	char ch_4[4];
+	char ch_5[4];
+	char ch_6[4];
+	char ch_7[4];
+	
+}ADC_CHANNELS_TypeDef;
 /*----------------------------------------------------------------------*/
 extern ADDRESS_TypeDef ADRESS;
 extern MODE_TypeDef MODE;
 extern OUTPUTS_TypeDef OUTPUTS;
-extern GONFIG_TypeDef GONFIG;
+extern CONFIG_TypeDef CONFIG;
 extern ADC_VALUES_TypeDef ADC_VALUES;
+extern ADC_CHANNELS_TypeDef ADC_CHANNELS;
 /*----------------------------------------------------------------------*/
 void GetHwAdrState( ADDRESS_TypeDef* state );
 void GetHwModeState( MODE_TypeDef *state );
-void GetHwOutState (OUTPUTS_TypeDef* state);
+void GetHwOutState ( OUTPUTS_TypeDef* state);
 #endif
 /****************************end of file ********************************/

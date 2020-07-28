@@ -18,7 +18,8 @@ static const char user_commands[NUM_OF_COMMANDS][COMMAND_BUF_SIZE] = {
 {__HELP},
 {__SAVE},
 {__SHOW},
-{__SET}
+{__SET},
+{__DEBUG}
 };
 
 /*user args for array compare*/

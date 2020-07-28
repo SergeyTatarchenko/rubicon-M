@@ -53,7 +53,10 @@ void _task_led(void *pvParameters)
 */
 void _task_state_update(void *pvParameters)
 {
-    for(;;)
+	/*load configuration data*/
+	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
+	
+	for(;;)
     {
 		/*update all hw states*/
         GetHwAdrState(&ADRESS);
@@ -81,7 +84,15 @@ void _task_service_serial(void *pvParameters)
 		{
 			serial_send_byte(received_word);
 		}
-		
+		if((mode == DEBUG) &&(received_word != '\r'))
+		{
+			serial_debug_output();
+			//vTaskDelay(1000);
+		}
+		if((mode == DEBUG) &&(received_word == '\r'))
+		{
+			mode = NORMAL;
+		}
 		if((received_word == '\r') && (mode == NORMAL))
 		{
 			/*enter to a programming mode*/
@@ -191,6 +202,11 @@ void serial_command_executor (TCmdTypeDef command)
 					break;
 			}
 			break;
+		case C_DEBUG:
+			mode = DEBUG;
+			cprintf(__POSLINE);
+			cprintf("current adc values : \r\n");
+			break;
 		/*error in input*/
 		case C_ERROR:
 			cprintf(__ERROR_MESSAGE);
@@ -199,6 +215,57 @@ void serial_command_executor (TCmdTypeDef command)
 		default:
 			break;
 	}
+}
+
+void serial_debug_output( void )
+{
+	itoa(ADC_VALUES.alrm_0,ADC_CHANNELS.ch_1,4);
+	itoa(ADC_VALUES.alrm_1,ADC_CHANNELS.ch_2,4);
+	itoa(ADC_VALUES.sign_0,ADC_CHANNELS.ch_4,4);
+	itoa(ADC_VALUES.sign_1,ADC_CHANNELS.ch_5,4);
+	itoa(ADC_VALUES.sign_2,ADC_CHANNELS.ch_6,4);
+	itoa(ADC_VALUES.sign_3,ADC_CHANNELS.ch_7,4);
+	for(int i = 0;i < 4; i++)
+	{
+		ADC_CHANNELS.ch_1[i]+=0x30;
+		ADC_CHANNELS.ch_2[i]+=0x30;
+		ADC_CHANNELS.ch_4[i]+=0x30;
+		ADC_CHANNELS.ch_5[i]+=0x30;
+		ADC_CHANNELS.ch_6[i]+=0x30;
+		ADC_CHANNELS.ch_7[i]+=0x30;
+	}
+	cprintf(" adc ch 1 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(ADC_CHANNELS.ch_1[i]);
+	}
+	cprintf(" adc ch 2 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(ADC_CHANNELS.ch_2[i]);
+	}
+	cprintf(" adc ch 4 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(ADC_CHANNELS.ch_4[i]);
+	}
+	cprintf(" adc ch 5 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(ADC_CHANNELS.ch_5[i]);
+	}
+	cprintf(" adc ch 6 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(ADC_CHANNELS.ch_6[i]);
+	}
+	cprintf(" adc ch 7 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(ADC_CHANNELS.ch_7[i]);
+	}
+	cprintf("\r");
+	
 }
 
 /****************************end of file ********************************/

@@ -15,9 +15,11 @@
 void _task_led(void *pvParameters);
 void _task_state_update(void *pvParameters);
 void _task_service_serial(void *pvParameters);
+/*----------------------------------------------------------------------*/
 
 
-void serial_command_executor (TCmdTypeDef command);
+void serial_command_executor ( TCmdTypeDef command );
+void serial_debug_output( void );
 
 typedef enum
 {

@@ -59,28 +59,45 @@ RUBICON revision A0 pinout description:
         RTS - PB12
 
 */
-#define led_zone_0_alrm_off  (GPIOA->BSRR |=GPIO_BSRR_BS_8)
-#define led_zone_0_alrm_on (GPIOA->BSRR |=GPIO_BSRR_BR_8)
 
-#define led_zone_0_err_off  (GPIOA->BSRR |=GPIO_BSRR_BS_9)
-#define led_zone_0_err_on (GPIOA->BSRR |=GPIO_BSRR_BR_9)
+/*flash*/
+#define FLASH_UNLOCK_WORD_1		((uint32_t)0x45670123)
+#define FLASH_UNLOCK_WORD_2		((uint32_t)0xCDEF89AB)
+/*
+sector #3 16KB size, 48KB limit flash memory for user program
+*/
+#define CONFIG_FLASH_ADDRESS	((uint32_t)0x0800C000)
+#define CONFIG_SECTOR_NUMBER	3
 
-#define led_zone_1_alrm_off  (GPIOA->BSRR |=GPIO_BSRR_BS_10)
-#define led_zone_1_alrm_on (GPIOA->BSRR |=GPIO_BSRR_BR_10)
+/*leds */
+#define led_zone_0_alrm_off	(GPIOA->BSRR |=GPIO_BSRR_BS_8 )
+#define led_zone_0_alrm_on	(GPIOA->BSRR |=GPIO_BSRR_BR_8 )
+#define led_zone_0_err_off	(GPIOA->BSRR |=GPIO_BSRR_BS_9 )
+#define led_zone_0_err_on	(GPIOA->BSRR |=GPIO_BSRR_BR_9 )
+#define led_zone_1_alrm_off	(GPIOA->BSRR |=GPIO_BSRR_BS_10)
+#define led_zone_1_alrm_on	(GPIOA->BSRR |=GPIO_BSRR_BR_10)
+#define led_zone_1_err_off	(GPIOA->BSRR |=GPIO_BSRR_BS_11)
+#define led_zone_1_err_on	(GPIOA->BSRR |=GPIO_BSRR_BR_11)
+#define sync_led_off		(GPIOC->BSRR |=GPIO_BSRR_BS_9 )
+#define sync_led_on			(GPIOC->BSRR |=GPIO_BSRR_BR_9 )
 
-#define led_zone_1_err_off  (GPIOA->BSRR |=GPIO_BSRR_BS_11)
-#define led_zone_1_err_on (GPIOA->BSRR |=GPIO_BSRR_BR_11)
+/*serial*/
+#define service_rts_on		(GPIOB->BSRR |=GPIO_BSRR_BS_12)
+#define service_rts_off		(GPIOB->BSRR |=GPIO_BSRR_BR_12)
 
-#define sync_led_off (GPIOC->BSRR |=GPIO_BSRR_BS_9)
-#define sync_led_on (GPIOC->BSRR |=GPIO_BSRR_BR_9)
-
-#define service_rts_on (GPIOB->BSRR |=GPIO_BSRR_BS_12)
-#define service_rts_off (GPIOB->BSRR |=GPIO_BSRR_BR_12)
-
+/*adc*/
 #define num_of_adc_conversion 6
+#define ADC_START	ADC1->CR2 |= ADC_CR2_SWSTART
+#define ADC_STOP	ADC1->CR2 &= ~ADC_CR2_SWSTART
+
+
 /*----------------------------------------------------------------------*/
 void pin_config(void);
 void peripheral_config(void);
 void sys_init(void);
+
+void flash_data_write(const uint32_t address,int sector, const uint32_t *data,int size);
+void flash_data_read(const uint32_t address, uint32_t *data,int size);
+
 
 #endif
