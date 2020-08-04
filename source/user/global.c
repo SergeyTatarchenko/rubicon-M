@@ -14,6 +14,13 @@ OUTPUTS_TypeDef OUTPUTS;
 CONFIG_TypeDef CONFIG;
 ADC_VALUES_TypeDef ADC_VALUES;
 ADC_CHANNELS_TypeDef ADC_CHANNELS;
+
+xQueueHandle service_serial_queue;
+xQueueHandle rs485_serial_queue;
+
+
+/*default serial transmit is USART3*/
+USART_TypeDef * serial_pointer = USART3;
 /*----------------------------------------------------------------------*/
 
 /* 

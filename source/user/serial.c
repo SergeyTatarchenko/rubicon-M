@@ -72,7 +72,7 @@ void serial_print_adress()
 	cprintf("Текущий адрес устройства в сети : ");
 	for(int i = 0; i < 3; i++)
 	{
-		serial_send_byte(address_txt[i] +0x30);
+		serial_send_byte(serial_pointer,address_txt[i] +0x30);
 	}
 	cprintf(__NEWLINE);
 	cprintf(__POSLINE);
@@ -333,7 +333,7 @@ int cprintf (const char *format,...)
     uint8_t i = 0;
     do
     {
-        serial_send_byte(format[i]);
+        serial_send_byte(serial_pointer,format[i]);
         i++;
     }
     while(format[i]!= '\0');
@@ -429,7 +429,7 @@ uint32_t chatoi(char *buff,int size)
 /* name: serial_send_byte
 *  descriprion: template for serial port send byte for io implementation
 */
-void __attribute__((weak)) serial_send_byte(const char byte)
+void __attribute__((weak)) serial_send_byte(USART_TypeDef* port,const char byte)
 {
 }
 

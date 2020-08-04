@@ -9,7 +9,8 @@
 
 /*----------------------------------------------------------------------*/
 #include "mcu_config.h"
-
+#include "RTOS.h"
+/*----------------------------------------------------------------------*/
 
 #define TRUE 1
 #define FALSE 0
@@ -120,12 +121,22 @@ typedef struct {
 	
 }ADC_CHANNELS_TypeDef;
 /*----------------------------------------------------------------------*/
+
 extern ADDRESS_TypeDef ADRESS;
 extern MODE_TypeDef MODE;
 extern OUTPUTS_TypeDef OUTPUTS;
 extern CONFIG_TypeDef CONFIG;
 extern ADC_VALUES_TypeDef ADC_VALUES;
 extern ADC_CHANNELS_TypeDef ADC_CHANNELS;
+
+/* global pointer to serial port peripheral module */
+extern USART_TypeDef * serial_pointer;
+
+/*queue for service stream input*/
+extern xQueueHandle service_serial_queue;
+/*queue for rs485 stream input*/
+extern xQueueHandle rs485_serial_queue;
+
 /*----------------------------------------------------------------------*/
 void GetHwAdrState( ADDRESS_TypeDef* state );
 void GetHwModeState( MODE_TypeDef *state );

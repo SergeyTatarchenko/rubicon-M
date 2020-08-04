@@ -11,13 +11,15 @@
 #include "stdint.h"
 #include "string.h"
 #include "text.h"
+#include "stm32f2xx.h"
 /*-------------------------global defines-------------------------------------*/
 /*terminal commands version 0.1*/
 
-#define COMMAND_BUF_SIZE 32 /*32 byte */
-#define NUM_OF_COMMANDS		6
-#define NUM_OF_ARGUMENTS	7
-#define MAX_VALUE_LENGHT	5
+#define COMMAND_BUF_SIZE		32	/*32 byte */
+#define SERVICE_COMMBUFF_SIZE	2	/*two commands in queue*/
+#define NUM_OF_COMMANDS			6
+#define NUM_OF_ARGUMENTS		7
+#define MAX_VALUE_LENGHT		5
 
 /*enum of user commands*/
 typedef enum {
@@ -59,7 +61,7 @@ int mprintf (const char *format, int size);
 uint32_t itoa(int i,char *buff,uint8_t MesSize);
 uint32_t chatoi(char *buff,int size);
 
-void serial_send_byte(const char byte);
+void serial_send_byte(USART_TypeDef* port,const char byte);
 void serial_send_array(const char *array,int size);
 
 TCmdTypeDef command_processing(char* buff);

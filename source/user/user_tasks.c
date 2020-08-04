@@ -82,12 +82,11 @@ void _task_service_serial(void *pvParameters)
 		/*input command reflection for user feedback*/
 		if(received_word != 0)
 		{
-			serial_send_byte(received_word);
+			serial_send_byte(serial_pointer,received_word);
 		}
 		if((mode == DEBUG) &&(received_word != '\r'))
 		{
 			serial_debug_output();
-			//vTaskDelay(1000);
 		}
 		if((mode == DEBUG) &&(received_word == '\r'))
 		{
@@ -237,32 +236,32 @@ void serial_debug_output( void )
 	cprintf(" adc ch 1 : ");
 	for(int i = 0; i < 4; i++)
 	{
-		serial_send_byte(ADC_CHANNELS.ch_1[i]);
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_1[i]);
 	}
 	cprintf(" adc ch 2 : ");
 	for(int i = 0; i < 4; i++)
 	{
-		serial_send_byte(ADC_CHANNELS.ch_2[i]);
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_2[i]);
 	}
 	cprintf(" adc ch 4 : ");
 	for(int i = 0; i < 4; i++)
 	{
-		serial_send_byte(ADC_CHANNELS.ch_4[i]);
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_4[i]);
 	}
 	cprintf(" adc ch 5 : ");
 	for(int i = 0; i < 4; i++)
 	{
-		serial_send_byte(ADC_CHANNELS.ch_5[i]);
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_5[i]);
 	}
 	cprintf(" adc ch 6 : ");
 	for(int i = 0; i < 4; i++)
 	{
-		serial_send_byte(ADC_CHANNELS.ch_6[i]);
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_6[i]);
 	}
 	cprintf(" adc ch 7 : ");
 	for(int i = 0; i < 4; i++)
 	{
-		serial_send_byte(ADC_CHANNELS.ch_7[i]);
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_7[i]);
 	}
 	cprintf("\r");
 	

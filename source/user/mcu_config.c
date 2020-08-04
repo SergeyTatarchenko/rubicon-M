@@ -7,6 +7,7 @@
 
 #include "mcu_config.h"
 #include "global.h"
+
 /*
 * low level microchip init function
 */
@@ -84,17 +85,26 @@ void peripheral_config()
 	USART3->BRR = 0x61A;
 	/***********************************************************************/
 	/*USART6 configuration (RS-485)*/
+	RCC->APB2ENR |= RCC_APB2ENR_USART6EN;
+	/*1)enable USART*/
+	USART6->CR1 |= (USART_CR1_UE|USART_CR1_TE|USART_CR1_RE|USART_CR1_RXNEIE);
+	/*2)Program the M bit 1 start bit, 8 data bits*/
+	USART6->CR1 &= ~USART_CR1_M;
+	/*3)Program the number of stop bits (2 stop bits)*/
+	USART6->CR2 &= ~USART_CR2_STOP;
+	USART6->CR1 |=USART_CR2_STOP_1;
+	/*19200 baudrate, APB1 clock is 30 MHz*/
+	USART6->BRR = 0x61A;
 }
 
 
 /* name: serial_send_byte
 *  descriprion: template for serial port send byte for io implementation
 */
-void serial_send_byte(const char byte)
+void serial_send_byte(USART_TypeDef* port,const char byte)
 {
-	//while(!(USART3->SR & USART_SR_TC));	 // while flag "transmission complete"
-	while(!(USART3->SR & USART_SR_TXE)); // if flag set "Transmit data register empty"
-	USART3->DR = byte;
+	while(!(port->SR & USART_SR_TXE)); // if flag set "Transmit data register empty"
+	port->DR = byte;
 }
 
 /* name: flash_data_write

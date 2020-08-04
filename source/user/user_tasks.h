@@ -26,7 +26,9 @@ typedef enum
 	NORMAL,
 	PROGRAMMING_SS,
 	PROGRAMMING_RS,
-	DEBUG
+	ALARM,
+	DEBUG,
+	FAULT
 }DEVICE_MODE;
 
 #endif

@@ -51,6 +51,9 @@ BaseType_t Init_()
 	TaskCreation &= xTaskCreate(&_task_state_update ,"main routine",configMINIMAL_STACK_SIZE, NULL, 2 , NULL );
 	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",configMINIMAL_STACK_SIZE, NULL, 3 , NULL );
 	
+	/*queue for service serial port*/
+	service_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,COMMAND_BUF_SIZE);
+	
 	return TaskCreation;
 }
 
