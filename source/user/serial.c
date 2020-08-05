@@ -9,9 +9,6 @@
  
 /*terminal commands version 0.1*/
 
-char reflection_byte;
-char combuff[COMMAND_BUF_SIZE];
-
 /*user commands for array compare*/
 static const char user_commands[NUM_OF_COMMANDS][COMMAND_BUF_SIZE] = {
 {__EXIT},
@@ -27,14 +24,17 @@ static const char user_arguments[NUM_OF_ARGUMENTS][COMMAND_BUF_SIZE] = {
 {__MODE},
 {__ADDRESS},
 {__STATE},
+{__CONFIG},
 {__TRESHOLD1},
 {__TRESHOLD2},
 {__TIMEINT1},
-{__TIMEINT2}
+{__TIMEINT2},
+{__TRIGLIMIT1},
+{__TRIGLIMIT2}
 };
 
 /*help textblock for print with terminal*/
-static const char help_text[14][__STRLEN]={
+static const char help_text[16][__STRLEN]={
 {__HELP_BLOCK_0},
 {__HELP_BLOCK_1},
 {__HELP_BLOCK_2},
@@ -49,6 +49,8 @@ static const char help_text[14][__STRLEN]={
 {__HELP_BLOCK_11},
 {__HELP_BLOCK_12},
 {__HELP_BLOCK_13},
+{__HELP_BLOCK_14},
+{__HELP_BLOCK_15}
 }; 
 
 /*
@@ -64,120 +66,6 @@ void terminal_print_txtblock(const char ( *buff )[__STRLEN], size_t strnum)
 }
 
 
-void serial_print_adress()
-{
-	char address_txt[3];
-	itoa(ADRESS.byte,address_txt,3);
-	cprintf(__POSLINE);
-	cprintf("Текущий адрес устройства в сети : ");
-	for(int i = 0; i < 3; i++)
-	{
-		serial_send_byte(serial_pointer,address_txt[i] +0x30);
-	}
-	cprintf(__NEWLINE);
-	cprintf(__POSLINE);
-}
-
-void serial_print_state( void )
-{
-	cprintf(__POSLINE);
-	cprintf("Текущее состояние зон:\r\n");
-	cprintf(" Зона 1 тревога : ");
-	
-	if(OUTPUTS.bit.zone_0_alarm == 1)
-	{
-		cprintf("Да");
-	}
-	else
-	{
-		cprintf("Нет");
-	}
-	cprintf(__NEWLINE);
-	cprintf(" Зона 1 ошибка  : ");
-	if(OUTPUTS.bit.zone_0_error == 1)
-	{
-		cprintf("Да");
-	}
-	else
-	{
-		cprintf("Нет");
-	}
-	cprintf(__NEWLINE);
-	cprintf(" Зона 2 тревога : ");
-	
-	if(OUTPUTS.bit.zone_1_alarm == 1)
-	{
-		cprintf("Да");
-	}
-	else
-	{
-		cprintf("Нет");
-	}
-	cprintf(__NEWLINE);
-	cprintf(" Зона 2 ошибка  : ");
-	if(OUTPUTS.bit.zone_1_error == 1)
-	{
-		cprintf("Да");
-	}
-	else
-	{
-		cprintf("Нет");
-	}
-	cprintf(__NEWLINE);
-	cprintf(__POSLINE);
-}
-
-void serial_print_mode()
-{
-	cprintf(__POSLINE);
-	cprintf("Текущее состояние системы:\r\n");
-	cprintf(" Контроль зоны 1 : ");
-	
-	if(MODE.bit.zone0_enable == 0)
-	{
-		cprintf("Активен");
-	}
-	else
-	{
-		cprintf("Отключен");
-	}
-	cprintf(__NEWLINE);
-	
-	cprintf(" Режим работы зоны 1 : ");
-	if(MODE.bit.zone0_mode == 1)
-	{
-		cprintf("Легкий тип ограждения");
-	}
-	else
-	{
-		cprintf("Тяжелый тип ограждения");
-	}
-	cprintf(__NEWLINE);
-	cprintf(" Контроль зоны 2 : ");
-	
-	if(MODE.bit.zone1_enable == 0)
-	{
-		cprintf("Активен");
-	}
-	else
-	{
-		cprintf("Отключен");
-	}
-	cprintf(__NEWLINE);
-	
-	cprintf(" Режим работы зоны 2 : ");
-	if(MODE.bit.zone1_mode == 1)
-	{
-		cprintf("Легкий тип ограждения");
-	}
-	else
-	{
-		cprintf("Тяжелый тип ограждения");
-	}
-	cprintf(__NEWLINE);
-	cprintf(__POSLINE);
-}
-
 /*
 * name : command_processing
 * description : user input command parser;
@@ -188,8 +76,8 @@ TCmdTypeDef command_processing(char* buff)
 	int num_of_symbols = 0;
 	int CmdWithArg = 0;
 	char command[COMMAND_BUF_SIZE] = {0},
-	arg_1[COMMAND_BUF_SIZE] = {0},
-	arg_2[COMMAND_BUF_SIZE] = {0};
+		arg_1[COMMAND_BUF_SIZE] = {0},
+		arg_2[COMMAND_BUF_SIZE] = {0};
 	int counter = 0;
 	TCmdTypeDef out;
 	
@@ -296,7 +184,7 @@ TCmdTypeDef command_processing(char* buff)
 	{
 		case C_HELP:
 			cprintf(__POSLINE);
-			terminal_print_txtblock(help_text,14);
+			terminal_print_txtblock(help_text,16);
 			cprintf(__POSLINE);
 			break;
 		
@@ -440,3 +328,203 @@ void __attribute__((weak)) serial_send_array(const char *array,int size)
 {
 }
 
+
+/**********************
+LOCAL PRINT FUNCTIONS
+**********************/
+void serial_print_adress()
+{
+	char address_txt[3];
+	itoa(ADRESS.byte,address_txt,3);
+	cprintf(__POSLINE);
+	cprintf("Текущий адрес устройства в сети : ");
+	for(int i = 0; i < 3; i++)
+	{
+		serial_send_byte(serial_pointer,address_txt[i] +0x30);
+	}
+	cprintf(__NEWLINE);
+	cprintf(__POSLINE);
+}
+
+void serial_print_state( void )
+{
+	cprintf(__POSLINE);
+	cprintf("Текущее состояние зон:\r\n");
+	cprintf(" Зона 1 тревога : ");
+	
+	if(OUTPUTS.bit.zone_0_alarm == 1)
+	{
+		cprintf("Да");
+	}
+	else
+	{
+		cprintf("Нет");
+	}
+	cprintf(__NEWLINE);
+	cprintf(" Зона 1 ошибка  : ");
+	if(OUTPUTS.bit.zone_0_error == 1)
+	{
+		cprintf("Да");
+	}
+	else
+	{
+		cprintf("Нет");
+	}
+	cprintf(__NEWLINE);
+	cprintf(" Зона 2 тревога : ");
+	
+	if(OUTPUTS.bit.zone_1_alarm == 1)
+	{
+		cprintf("Да");
+	}
+	else
+	{
+		cprintf("Нет");
+	}
+	cprintf(__NEWLINE);
+	cprintf(" Зона 2 ошибка  : ");
+	if(OUTPUTS.bit.zone_1_error == 1)
+	{
+		cprintf("Да");
+	}
+	else
+	{
+		cprintf("Нет");
+	}
+	cprintf(__NEWLINE);
+	cprintf(__POSLINE);
+}
+
+
+void serial_print_config()
+{
+	const int array_size = 5;
+	char array[array_size];
+	cprintf(__NEWLINE);
+	cprintf(__POSLINE);
+	cprintf("ТЕКУЩАЯ КОНФИГУРАЦИЯ СИСТЕМЫ :\r\n");
+	/********************************************/
+	cprintf(__NEWLINE);
+	itoa(CONFIG.data.zone_0_timeint,array,array_size);
+	cprintf("Временное окно зоны 1, мс : ");
+	for(int i = 0; i < array_size; i++)
+	{
+		serial_send_byte(serial_pointer,array[i] +0x30);
+	}
+	memset(array,0,array_size);
+	/********************************************/
+	cprintf(__NEWLINE);
+	itoa(CONFIG.data.zone_1_timeint,array,array_size);
+	cprintf("Временное окно зоны 2, мс : ");
+	for(int i = 0; i < array_size; i++)
+	{
+		serial_send_byte(serial_pointer,array[i] +0x30);
+	}
+	memset(array,0,array_size);
+	/********************************************/
+	cprintf(__NEWLINE);
+	/********************************************/
+	cprintf(__NEWLINE);
+	itoa(CONFIG.data.zone_0_treshold,array,array_size);
+	cprintf("Порог срабатывания зоны 1, мВ : ");
+	for(int i = 0; i < array_size; i++)
+	{
+		serial_send_byte(serial_pointer,array[i] +0x30);
+	}
+	memset(array,0,array_size);
+	/********************************************/
+	cprintf(__NEWLINE);
+	itoa(CONFIG.data.zone_1_treshold,array,array_size);
+	cprintf("Порог срабатывания зоны 2, мВ : ");
+	for(int i = 0; i < array_size; i++)
+	{
+		serial_send_byte(serial_pointer,array[i] +0x30);
+	}
+	memset(array,0,array_size);
+	/********************************************/
+	cprintf(__NEWLINE);
+	/********************************************/
+	cprintf(__NEWLINE);
+	itoa(CONFIG.data.zone_0_triglimit,array,array_size);
+	cprintf("Предельное число срабатываний за интервал зоны 1 : ");
+	for(int i = 0; i < array_size; i++)
+	{
+		serial_send_byte(serial_pointer,array[i] +0x30);
+	}
+	memset(array,0,array_size);
+	/********************************************/
+	cprintf(__NEWLINE);
+	itoa(CONFIG.data.zone_1_triglimit,array,array_size);
+	cprintf("Предельное число срабатываний за интервал зоны 2 : ");
+	for(int i = 0; i < array_size; i++)
+	{
+		serial_send_byte(serial_pointer,array[i] +0x30);
+	}
+	memset(array,0,array_size);
+	/********************************************/
+	cprintf(__NEWLINE);
+	cprintf(__POSLINE);
+}
+
+void serial_print_mode()
+{
+	cprintf(__POSLINE);
+	cprintf("Текущее состояние системы:\r\n");
+	cprintf(" Контроль зоны 1 : ");
+	
+	if(MODE.bit.zone0_enable == 0)
+	{
+		cprintf("Активен");
+	}
+	else
+	{
+		cprintf("Отключен");
+	}
+	cprintf(__NEWLINE);
+	
+	cprintf(" Режим работы зоны 1 : ");
+	if(MODE.bit.zone0_mode == 1)
+	{
+		cprintf("Легкий тип ограждения");
+	}
+	else
+	{
+		cprintf("Тяжелый тип ограждения");
+	}
+	cprintf(__NEWLINE);
+	cprintf(" Контроль зоны 2 : ");
+	
+	if(MODE.bit.zone1_enable == 0)
+	{
+		cprintf("Активен");
+	}
+	else
+	{
+		cprintf("Отключен");
+	}
+	cprintf(__NEWLINE);
+	
+	cprintf(" Режим работы зоны 2 : ");
+	if(MODE.bit.zone1_mode == 1)
+	{
+		cprintf("Легкий тип ограждения");
+	}
+	else
+	{
+		cprintf("Тяжелый тип ограждения");
+	}
+	cprintf(__NEWLINE);
+	cprintf(__POSLINE);
+}
+
+void serial_print_welcome()
+{
+	cprintf(__POSLINE);
+	cprintf("Система контроля периметра <<РУБИКОН>>\n\r");
+	cprintf("Версия программного обеспечения: ");
+	cprintf(VERSION);
+	cprintf(__NEWLINE);
+	cprintf("Для справки введите help и нажмите Enter\n\r");
+	cprintf("Для выхода введите exit и нажмите Enter\n\r");
+	cprintf(__POSLINE);
+}

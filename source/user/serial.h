@@ -18,7 +18,7 @@
 #define COMMAND_BUF_SIZE		32	/*32 byte */
 #define SERVICE_COMMBUFF_SIZE	2	/*two commands in queue*/
 #define NUM_OF_COMMANDS			6
-#define NUM_OF_ARGUMENTS		7
+#define NUM_OF_ARGUMENTS		10
 #define MAX_VALUE_LENGHT		5
 
 /*enum of user commands*/
@@ -37,11 +37,13 @@ typedef enum{
 	A_MODE,
 	A_ADDRESS,
 	A_STATE,
+	A_CONFIG,
 	A_TRESHOLD1,
 	A_TRESHOLD2,
 	A_TIMEINT1,
 	A_TIMEINT2,
-	
+	A_TRIGLIMIT1,
+	A_TRIGLIMIT2,
 	A_ERROR
 }ARGUMENTS;
 
@@ -72,10 +74,9 @@ void terminal_print_txtblock( const char ( *buff )[__STRLEN], size_t strnum);
 
 void serial_print_state( void );
 void serial_print_adress( void );
+void serial_print_config( void );
 void serial_print_mode( void );
-
-extern char reflection_byte;
-extern char combuff[COMMAND_BUF_SIZE];
+void serial_print_welcome( void );
 
 #endif
 /****************************end of file ********************************/

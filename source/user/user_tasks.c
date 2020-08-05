@@ -8,7 +8,6 @@
 /*----------------------------------------------------------------------*/
 #include "user_tasks.h"
 /*----------------------------------------------------------------------*/
-const int tick_overload = 3600;
 DEVICE_MODE mode = NORMAL;
 
 
@@ -17,12 +16,121 @@ DEVICE_MODE mode = NORMAL;
 */
 void USART3_IRQHandler()
 {
+	static uint8_t counter = 0;
+	static char buffer[COMMAND_BUF_SIZE] = {0};
+	char byte;
+	
+	/*data exist in DR register*/
 	if(USART3->SR &= USART_SR_RXNE)
 	{
-		reflection_byte = USART3->DR;
+		byte = USART3->DR;
+		if(byte != '\r')
+		{
+			//xQueueSendFromISR(service_serial_reflection,&byte,0);
+			/*input buffer oferflow error*/
+			if(counter == COMMAND_BUF_SIZE)
+			{
+				counter = 0;
+				memset(buffer,0,COMMAND_BUF_SIZE);
+			}
+			else
+			{
+				buffer[counter] = byte;
+				/*word counter increment*/
+				counter++;
+			}
+		}
+		else if(byte == '\r')
+		{
+			/*mode switching*/
+			switch(mode)
+			{
+				case NORMAL:
+					mode = PROGRAMMING_SS;
+					break;
+				case DEBUG:
+					mode = PROGRAMMING_SS;
+					break;
+				case PROGRAMMING_SS:
+					counter = 0;
+					/*send data to queue (command extracted in _task_service_serial function)*/
+					xQueueSendFromISR(service_serial_queue,buffer,0);
+					memset(buffer,0,COMMAND_BUF_SIZE);
+					break;
+				default:
+					break;
+			}
+		}
 	}
 }
 
+/* name: _task_service_mirror
+*  descriprion: reflects received bytes to the serial port (rendering of manual input, can be disabled)
+*/
+void _task_service_mirror(void *pvParameters)
+{
+	char buffer;
+	while(TRUE)
+	{
+		xQueueReceive(service_serial_reflection,&buffer,portMAX_DELAY);
+		serial_send_byte(serial_pointer,buffer);
+	}
+}
+
+/* name: _task_service_serial
+*  descriprion: service serial port input/output data processing
+*/
+void _task_service_serial(void *pvParameters)
+{
+	const int tick_overload = 3600;
+	static uint8_t trigger = FALSE;
+	static int tick = 0;
+	TCmdTypeDef input_command;
+	char buffer[COMMAND_BUF_SIZE] = {0};
+	while(TRUE)
+	{
+		if(tick > tick_overload)
+		{
+			tick = 0;
+		}
+		else
+		{
+			tick++;
+		}
+		
+		/*debug ADC output*/
+		if(mode == DEBUG)
+		{
+			serial_debug_output();
+		}
+		/*print welcome message in programming mode*/
+		if((trigger == FALSE) && (mode == PROGRAMMING_SS))
+		{
+			trigger = TRUE;
+			serial_print_welcome();
+		}
+		/*command buffer not empty*/
+		if(uxQueueMessagesWaiting( service_serial_queue ) != 0)
+		{
+			xQueueReceive(service_serial_queue,&buffer,portMAX_DELAY);
+			input_command = command_processing(buffer);
+			
+			/*trigger reset*/
+			if(input_command.command == C_EXIT)
+			{
+				trigger = FALSE;
+			}
+			serial_command_executor(input_command);
+		}
+		/*send header message every 2s to terminal*/
+		if((mode == NORMAL) && tick %40 == 0)
+		{
+			cprintf(__NEWLINE);
+			cprintf(__HEADER_MESSAGE);
+		}
+		vTaskDelay(50);
+	}
+}
 
 /* name: _task_led
 *  descriprion: indication control procedure
@@ -30,7 +138,7 @@ void USART3_IRQHandler()
 void _task_led(void *pvParameters)
 {
 //	static int tick = 0;
-	for(;;)
+	while(TRUE)
 	{
 /*		if(tick < tick_overload)
 		{
@@ -56,7 +164,7 @@ void _task_state_update(void *pvParameters)
 	/*load configuration data*/
 	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
 	
-	for(;;)
+	while(TRUE)
     {
 		/*update all hw states*/
         GetHwAdrState(&ADRESS);
@@ -66,91 +174,7 @@ void _task_state_update(void *pvParameters)
     }
 }
 
-/* name: _task_service_serial
-*  descriprion: service serial port input/output data processing
-*/
-void _task_service_serial(void *pvParameters)
-{
-	static char received_word = 0;
-	static int tick = 0;
-	static int word_counter = 0;
-	TCmdTypeDef input_command;
-	for(;;)
-	{
-		tick++;
-		received_word = reflection_byte;
-		/*input command reflection for user feedback*/
-		if(received_word != 0)
-		{
-			serial_send_byte(serial_pointer,received_word);
-		}
-		if((mode == DEBUG) &&(received_word != '\r'))
-		{
-			serial_debug_output();
-		}
-		if((mode == DEBUG) &&(received_word == '\r'))
-		{
-			mode = NORMAL;
-		}
-		if((received_word == '\r') && (mode == NORMAL))
-		{
-			/*enter to a programming mode*/
-			mode = PROGRAMMING_SS;
-			cprintf(__POSLINE);
-			cprintf("Система контроля периметра <<РУБИКОН>>\n\r");
-			cprintf("Версия программного обеспечения: ");
-			cprintf(VERSION);
-			cprintf("\n\r");
-			cprintf("Для справки введите help и нажмите Enter\n\r");
-			cprintf("Для выхода введите exit и нажмите Enter\n\r");
-			cprintf(__POSLINE);
-			reflection_byte = 0;
-			received_word = 0;
-		}
-		if((mode == PROGRAMMING_SS)&& (reflection_byte != 0))
-		{
-			reflection_byte = 0;
-			if(received_word != '\r')
-			{
-				/*input buffer oferflow error*/
-				if(word_counter == COMMAND_BUF_SIZE)
-				{
-					word_counter = 0;
-					memset(combuff,0,COMMAND_BUF_SIZE);
-					cprintf(__NEWLINE);
-					cprintf(__ERROR_MESSAGE);
-					cprintf(__NEWLINE);
-				}
-				else
-				{
-					combuff[word_counter] = received_word;
-					/*word counter increment*/
-					word_counter++;
-				}
-			}
-			else if(received_word == '\r')
-			{
-				word_counter = 0;
-				input_command = command_processing(combuff);
-				serial_command_executor(input_command);
-				memset(combuff,0,COMMAND_BUF_SIZE);
-				word_counter = 0;
-			}
-		}
-		else if(reflection_byte != 0)
-		{
-			reflection_byte = 0;
-		}
-		/*send header message every 2s to terminal*/
-		if((mode == NORMAL) && tick %40 == 0)
-		{
-			tick = 0;
-			cprintf(__NEWLINE);
-			cprintf(__HEADER_MESSAGE);
-		}
-		vTaskDelay(50);
-	}
-}
+
 
 /* name: serial_command_executor
 *  descriprion: execute commands from terminal in service serial task
@@ -168,8 +192,11 @@ void serial_command_executor (TCmdTypeDef command)
 		/*print help textblock*/
 		case C_HELP:
 			break;
-		/*save current config to flash*/
+		/*save current config to flash
+		WARNING!!! CPU stop during flash programming*/
 		case C_SAVE:
+			flash_data_write(CONFIG_FLASH_ADDRESS,CONFIG_SECTOR_NUMBER,CONFIG.array,sizeof(CONFIG));
+			cprintf("ok\r\n");
 			break;
 		/*show something (see argument)*/
 		case C_SHOW:
@@ -184,6 +211,9 @@ void serial_command_executor (TCmdTypeDef command)
 				case A_STATE:
 					serial_print_state();
 					break;
+				case A_CONFIG:
+					serial_print_config();
+					break;
 				default:
 					cprintf(__ERROR_MESSAGE);
 					cprintf(__NEWLINE);
@@ -194,7 +224,18 @@ void serial_command_executor (TCmdTypeDef command)
 		case C_SET:
 			switch(command.argument)
 			{
-				
+				case A_TIMEINT1:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_0_timeint = command.value;
+						cprintf("ok\r\n");
+					}
+					else
+					{
+						cprintf(__ERROR_MESSAGE);
+						cprintf(__NEWLINE);
+					}
+					break;
 				default:
 					cprintf(__ERROR_MESSAGE);
 					cprintf(__NEWLINE);

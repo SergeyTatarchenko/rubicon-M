@@ -120,6 +120,14 @@ typedef struct {
 	char ch_7[4];
 	
 }ADC_CHANNELS_TypeDef;
+
+typedef struct{
+	uint8_t user_priority;		/*system layer tasks                    */
+	uint8_t serial_priority;	/*transmit data tasks                   */
+	uint_least16_t stack_serial;/*stack size for data transmit/receive  */
+	uint_least16_t stack_user;	/*stack for user layer tasks and threads*/
+}MEM_ALLOCATION_TypeDef;
+
 /*----------------------------------------------------------------------*/
 
 extern ADDRESS_TypeDef ADRESS;
@@ -134,6 +142,7 @@ extern USART_TypeDef * serial_pointer;
 
 /*queue for service stream input*/
 extern xQueueHandle service_serial_queue;
+extern xQueueHandle service_serial_reflection;
 /*queue for rs485 stream input*/
 extern xQueueHandle rs485_serial_queue;
 

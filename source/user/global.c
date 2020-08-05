@@ -16,6 +16,7 @@ ADC_VALUES_TypeDef ADC_VALUES;
 ADC_CHANNELS_TypeDef ADC_CHANNELS;
 
 xQueueHandle service_serial_queue;
+xQueueHandle service_serial_reflection;
 xQueueHandle rs485_serial_queue;
 
 

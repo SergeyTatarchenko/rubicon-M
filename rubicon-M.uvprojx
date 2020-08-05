@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\source\user;.\source\system;..\FreeRTOS-Kernel\include;..\FreeRTOS-Kernel;..\FreeRTOS-Kernel\portable\RVDS\ARM_CM3;..\SOM\OBJ_MODEL</IncludePath>
+              <IncludePath>.\source\user;.\source\system;..\FreeRTOS-Kernel\include;..\FreeRTOS-Kernel;..\FreeRTOS-Kernel\portable\RVDS\ARM_CM3</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -440,9 +440,6 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>OBJ</GroupName>
-        </Group>
-        <Group>
           <GroupName>RTOS</GroupName>
           <Files>
             <File>
@@ -494,21 +491,6 @@
               <FileName>heap_1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FreeRTOS-Kernel\portable\MemMang\heap_1.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>SOM</GroupName>
-          <Files>
-            <File>
-              <FileName>OBJ_MODEL.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\SOM\OBJ_MODEL\OBJ_MODEL.h</FilePath>
-            </File>
-            <File>
-              <FileName>RTOS.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\SOM\OBJ_MODEL\RTOS.h</FilePath>
             </File>
           </Files>
         </Group>

@@ -13,15 +13,19 @@
 void SysClkUpd( void );
 BaseType_t Init_( void );
 
+static MEM_ALLOCATION_TypeDef MEM_ALLOCATION;
+
 /*
 * name: main
 * description : main
 */
 int main()
 {
+	
 	BaseType_t _AllOk_;
 	SysClkUpd();
 	sys_init();
+	
 	_AllOk_ = Init_();
 	if(_AllOk_ == pdTRUE)
 	{
@@ -46,13 +50,24 @@ int main()
 BaseType_t Init_()
 {
 	BaseType_t TaskCreation;
-
-	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, NULL, 1 , NULL );
-	TaskCreation &= xTaskCreate(&_task_state_update ,"main routine",configMINIMAL_STACK_SIZE, NULL, 2 , NULL );
-	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",configMINIMAL_STACK_SIZE, NULL, 3 , NULL );
+	MEM_ALLOCATION.serial_priority = configMAX_PRIORITIES - 2;
+	MEM_ALLOCATION.user_priority =   configMAX_PRIORITIES - 1;
+	MEM_ALLOCATION.stack_user = 512;
+	MEM_ALLOCATION.stack_serial = 256;
 	
+	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
+									NULL, MEM_ALLOCATION.user_priority , NULL );
+	TaskCreation &= xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
+									NULL, MEM_ALLOCATION.user_priority , NULL );
+	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",MEM_ALLOCATION.stack_serial,
+									NULL, MEM_ALLOCATION.serial_priority , NULL );
+	/*
+	TaskCreation &= xTaskCreate(&_task_service_mirror ,"serial mirror",MEM_ALLOCATION.stack_serial,
+									NULL, MEM_ALLOCATION.serial_priority , NULL );
+	*/
 	/*queue for service serial port*/
 	service_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,COMMAND_BUF_SIZE);
+	service_serial_reflection = xQueueCreate(1,COMMAND_BUF_SIZE);
 	
 	return TaskCreation;
 }

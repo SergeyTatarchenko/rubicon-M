@@ -125,11 +125,14 @@ void flash_data_write(const uint32_t address,int sector, const uint32_t *data,in
 	FLASH->CR |= (sector<<3);
 	FLASH->CR |= FLASH_CR_STRT;
 	while(FLASH->SR&FLASH_SR_BSY);
+	FLASH->CR  &= ~FLASH_CR_SER;
+	FLASH->CR  |= FLASH_CR_PG;
 	for(int i = 0;i < size/4; i++)
 	{
 		*(memory_pointer+i) = data[i];
 		while(FLASH->SR&FLASH_SR_BSY);
 	}
+	FLASH->CR  &= ~FLASH_CR_PG;
 	/*flash lock*/
 	FLASH->CR  |= FLASH_CR_LOCK;
 }

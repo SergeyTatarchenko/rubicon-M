@@ -15,6 +15,7 @@
 void _task_led(void *pvParameters);
 void _task_state_update(void *pvParameters);
 void _task_service_serial(void *pvParameters);
+void _task_service_mirror(void *pvParameters);
 /*----------------------------------------------------------------------*/
 
 
