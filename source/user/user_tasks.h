@@ -12,11 +12,20 @@
 #include "serial.h"
 #include "text.h"
 /*----------------------------------------------------------------------*/
+#define STATE_UPDATE_RATE	20
+#define SERIAL_UPDATE_RATE	50
+
+
+/*----------------------------------------------------------------------*/
+
 void _task_led(void *pvParameters);
 void _task_state_update(void *pvParameters);
 void _task_service_serial(void *pvParameters);
 void _task_service_mirror(void *pvParameters);
 /*----------------------------------------------------------------------*/
+
+uint16_t adc_covert_from_mv(uint16_t value);
+uint16_t adc_covert_to_mv(uint16_t value);
 
 
 void serial_command_executor ( TCmdTypeDef command );
@@ -31,6 +40,7 @@ typedef enum
 	DEBUG,
 	FAULT
 }DEVICE_MODE;
+
 
 #endif
 /****************************end of file ********************************/

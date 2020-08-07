@@ -60,4 +60,21 @@ void GetHwOutState ( OUTPUTS_TypeDef* state )
 {
 
 }
+
+/*
+* check TAPMER input, return 0 if signal OFF
+*/
+int CheckTamperPin()
+{
+	int signal = (GPIOA->IDR & GPIO_IDR_IDR_15);
+	if(signal != 0)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
 /****************************end of file ********************************/

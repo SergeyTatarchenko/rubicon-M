@@ -17,6 +17,17 @@
 
 #define VERSION	"0.1"
 /*----------------------------------------------------------------------*/
+/* enum for ADC channels check function                                 */
+typedef enum
+{
+	S_NORMAL,
+	S_ERROR_ZONE1,
+	S_ERROR_ZONE2,
+	S_ALARM_ZONE1,
+	S_ALARM_ZONE2,
+	
+}DEVICE_STATE_TypeDef;
+
 /* union for manual ADDRESS configuration                               */
 typedef union
 {
@@ -128,6 +139,12 @@ typedef struct{
 	uint_least16_t stack_user;	/*stack for user layer tasks and threads*/
 }MEM_ALLOCATION_TypeDef;
 
+
+#define ZONE_0_F1	ADC_VALUES.sign_0
+#define ZONE_0_F2	ADC_VALUES.sign_1
+
+#define ZONE_1_F1	ADC_VALUES.sign_2
+#define ZONE_1_F2	ADC_VALUES.sign_3
 /*----------------------------------------------------------------------*/
 
 extern ADDRESS_TypeDef ADRESS;
@@ -150,5 +167,6 @@ extern xQueueHandle rs485_serial_queue;
 void GetHwAdrState( ADDRESS_TypeDef* state );
 void GetHwModeState( MODE_TypeDef *state );
 void GetHwOutState ( OUTPUTS_TypeDef* state);
+int CheckTamperPin( void );
 #endif
 /****************************end of file ********************************/

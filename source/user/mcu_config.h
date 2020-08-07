@@ -90,6 +90,8 @@ sector #3 16KB size, 48KB limit flash memory for user program
 #define ADC_START	ADC1->CR2 |= ADC_CR2_SWSTART
 #define ADC_STOP	ADC1->CR2 &= ~ADC_CR2_SWSTART
 
+#define ADC_DEPTH		4096
+#define INT_ADC_REF		3300	/*mV*/
 
 /*----------------------------------------------------------------------*/
 void pin_config(void);

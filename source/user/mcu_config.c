@@ -182,6 +182,15 @@ void pin_config()
     GPIOC->MODER &= ~(GPIO_MODER_MODER10|GPIO_MODER_MODER11);
     GPIOC->PUPDR |=  (GPIO_PUPDR_PUPDR10_0|GPIO_PUPDR_PUPDR11_0);
     GPIOC->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR10|GPIO_OSPEEDER_OSPEEDR11);
+
+/*
+ TAMPER input PA15
+ configure as input floating/pullup, low speed
+*/
+    GPIOA->MODER &= ~GPIO_MODER_MODER15;
+    GPIOA->PUPDR |= GPIO_PUPDR_PUPDR15_0;
+    GPIOA->OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR15;
+
 /*
  ADC pins PA1, PA2, PA4, PA5, PA6, PA7
  configure in as analog mode, high speed

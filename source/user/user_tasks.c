@@ -10,6 +10,9 @@
 /*----------------------------------------------------------------------*/
 DEVICE_MODE mode = NORMAL;
 
+/*value from CONFIG struct converted from mV*/
+static uint16_t zone_0_treshold = 0;
+static uint16_t zone_1_treshold = 0;
 
 /* name: USART3_IRQHandler
 *  descriprion: interrupt handler for service serial port communication
@@ -49,6 +52,9 @@ void USART3_IRQHandler()
 					mode = PROGRAMMING_SS;
 					break;
 				case DEBUG:
+					mode = PROGRAMMING_SS;
+					break;
+				case ALARM:
 					mode = PROGRAMMING_SS;
 					break;
 				case PROGRAMMING_SS:
@@ -123,13 +129,13 @@ void _task_service_serial(void *pvParameters)
 			serial_command_executor(input_command);
 		}
 		/*send header message every 2s to terminal*/
-		if((mode == NORMAL) && tick %40 == 0)
+		if((mode == NORMAL ||mode == ALARM) && tick %40 == 0)
 		{
 			cprintf(__NEWLINE);
 			cprintf(__HEADER_MESSAGE);
 		}
 		vTaskDelay(50);
-	}
+	 }
 }
 
 /* name: _task_led
@@ -161,20 +167,140 @@ void _task_led(void *pvParameters)
 */
 void _task_state_update(void *pvParameters)
 {
+	static int tick = 0;
+	static const int tick_overload = 99999;
+	
 	/*load configuration data*/
 	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
 	
+	zone_0_treshold = adc_covert_from_mv(CONFIG.data.zone_0_treshold);
+	zone_1_treshold = adc_covert_from_mv(CONFIG.data.zone_1_treshold);
+	
 	while(TRUE)
     {
-		/*update all hw states*/
-        GetHwAdrState(&ADRESS);
-        GetHwModeState(&MODE);
-        GetHwOutState(&OUTPUTS);
-        vTaskDelay(10);
-    }
+		if(tick > tick_overload )
+		{
+			tick = 0;
+		}
+		else
+		{
+			tick++;
+		}
+		
+		if(tick%20 == 0)
+		{
+			/*update all hw states*/
+			GetHwAdrState(&ADRESS);
+			GetHwModeState(&MODE);
+			GetHwOutState(&OUTPUTS);
+			/*if TAPMER off set mode ALARM, swicth all outputs OFF, all fault LED ON*/
+			/*
+			if(!CheckTamperPin())
+			{
+				if(mode != PROGRAMMING_SS)
+				{
+					mode = ALARM;
+				}
+				
+				led_zone_0_err_on;
+				led_zone_1_err_on;
+			}
+			else
+			{
+				if(mode != PROGRAMMING_SS)
+				{
+					mode = NORMAL;
+				}
+				led_zone_0_err_off;
+				led_zone_1_err_off;
+			}
+			*/
+		}
+		vTaskDelay(1);
+	}
 }
 
-
+/* name: rubicon_zone_thread
+*  descriprion: main routine thread, adc channel digitization return enum of states
+*/
+DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
+{
+	static int tick_zone_0 = 0,
+			   tick_zone_1 = 0,
+			   zone_0_trigger_counter = 0,
+			   zone_1_trigger_counter = 0,
+			   zone_0_trigger = 0,
+			   zone_1_trigger = 0;
+	
+	DEVICE_STATE_TypeDef state = S_NORMAL;
+	/*zone 0 counter down*/
+	if(tick_zone_0 > 0)
+	{
+		tick_zone_0 --;
+	}
+	else
+	{
+		/*trigger counter reset*/
+		zone_0_trigger_counter = 0;
+		zone_0_trigger = 0;
+	}
+	
+	/*zone 1 counter down*/
+	if(tick_zone_1 > 0)
+	{
+		tick_zone_1 --;
+	}
+	else
+	{
+		/*trigger counter reset*/
+		zone_1_trigger_counter = 0;
+		zone_1_trigger = 0;
+	}
+	
+	/*ZONE 0*/
+	if(!MODE.bit.zone0_enable)
+	{
+		switch(MODE.bit.zone0_mode)
+		{
+			case TRUE:
+				/*zone 0 treshold exceed*/
+				if(ZONE_0_F1 > zone_0_treshold)
+				{
+					
+				}
+				break;
+			case FALSE:
+				if(ZONE_0_F2 > zone_0_treshold)
+				{
+					
+				}
+				break;
+		}
+	}
+	
+	/*ZONE 1*/
+	if(!MODE.bit.zone1_enable)
+	{
+		switch(MODE.bit.zone0_mode)
+		{
+			case TRUE:
+				/*zone 1 treshold exceed*/
+				if(ZONE_1_F1 > zone_1_treshold)
+				{
+					
+				}
+			break;
+		case FALSE:
+				if(ZONE_1_F1 > zone_1_treshold)
+				{
+					
+				}
+			break;
+		}
+	}
+	
+	return state;
+}
 
 /* name: serial_command_executor
 *  descriprion: execute commands from terminal in service serial task
@@ -236,6 +362,66 @@ void serial_command_executor (TCmdTypeDef command)
 						cprintf(__NEWLINE);
 					}
 					break;
+				case A_TIMEINT2:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_1_timeint = command.value;
+						cprintf("ok\r\n");
+					}
+					else
+					{
+						cprintf(__ERROR_MESSAGE);
+						cprintf(__NEWLINE);
+					}
+					break;
+				case A_TRESHOLD1:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_0_treshold = command.value;
+						cprintf("ok\r\n");
+					}
+					else
+					{
+						cprintf(__ERROR_MESSAGE);
+						cprintf(__NEWLINE);
+					}
+					break;
+				case A_TRESHOLD2:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_1_treshold = command.value;
+						cprintf("ok\r\n");
+					}
+					else
+					{
+						cprintf(__ERROR_MESSAGE);
+						cprintf(__NEWLINE);
+					}
+					break;
+				case A_TRIGLIMIT1:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_0_triglimit = command.value;
+						cprintf("ok\r\n");
+					}
+					else
+					{
+						cprintf(__ERROR_MESSAGE);
+						cprintf(__NEWLINE);
+					}
+					break;
+				case A_TRIGLIMIT2:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_1_triglimit = command.value;
+						cprintf("ok\r\n");
+					}
+					else
+					{
+						cprintf(__ERROR_MESSAGE);
+						cprintf(__NEWLINE);
+					}
+					break;
 				default:
 					cprintf(__ERROR_MESSAGE);
 					cprintf(__NEWLINE);
@@ -257,6 +443,27 @@ void serial_command_executor (TCmdTypeDef command)
 	}
 }
 
+/* name: adc_covert_from_mv
+*  descriprion: convert value in mV to ADC output format
+*/
+uint16_t adc_covert_from_mv(uint16_t value)
+{
+	uint16_t data = (ADC_DEPTH*value)/INT_ADC_REF;
+	return data;
+}
+
+/* name: adc_covert_to_mv
+*  descriprion: convert value from ADC DR to mV
+*/
+uint16_t adc_covert_to_mv(uint16_t value)
+{
+	uint16_t data = (INT_ADC_REF*value)/ADC_DEPTH;
+	return data;
+}
+
+/* name: serial_debug_output
+*  descriprion: debug output from ADC channels
+*/
 void serial_debug_output( void )
 {
 	itoa(ADC_VALUES.alrm_0,ADC_CHANNELS.ch_1,4);
