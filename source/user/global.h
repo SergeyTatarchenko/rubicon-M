@@ -163,6 +163,8 @@ extern xQueueHandle service_serial_reflection;
 /*queue for rs485 stream input*/
 extern xQueueHandle rs485_serial_queue;
 
+extern xSemaphoreHandle xMutex_serial_BUSY;
+extern char sp_buff[__STRLEN];
 /*----------------------------------------------------------------------*/
 void GetHwAdrState( ADDRESS_TypeDef* state );
 void GetHwModeState( MODE_TypeDef *state );

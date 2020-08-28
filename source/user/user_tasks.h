@@ -27,6 +27,7 @@ void _task_service_mirror(void *pvParameters);
 uint16_t adc_covert_from_mv(uint16_t value);
 uint16_t adc_covert_to_mv(uint16_t value);
 
+DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration);
 
 void serial_command_executor ( TCmdTypeDef command );
 void serial_debug_output( void );
@@ -40,7 +41,6 @@ typedef enum
 	DEBUG,
 	FAULT
 }DEVICE_MODE;
-
 
 #endif
 /****************************end of file ********************************/

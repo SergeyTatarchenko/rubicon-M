@@ -437,6 +437,11 @@
               <FileType>5</FileType>
               <FilePath>.\source\user\text.h</FilePath>
             </File>
+            <File>
+              <FileName>rubicon_777.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\source\user\rubicon_777.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

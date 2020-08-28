@@ -5,7 +5,6 @@
 * Description        : mcu pins and peripheral low level configuration
 *************************************************************************/
 
-#include "mcu_config.h"
 #include "global.h"
 
 /*
@@ -32,6 +31,8 @@ void peripheral_config()
 {
 	/*DMA2 clock*/
 	RCC->AHB1ENR|= RCC_AHB1ENR_DMA2EN;
+	/*DMA1 clock*/
+	RCC->AHB1ENR|= RCC_AHB1ENR_DMA1EN;
 	/* 
 	stream 0 - channel 0 ADC, high priority,
 	16 bit data transfer, peripheral to memory mode,
@@ -50,6 +51,19 @@ void peripheral_config()
 	DMA2_Stream0->M0AR = (uint32_t)&ADC_VALUES;
 	/*enable stream*/
 	DMA2_Stream0->CR |= DMA_SxCR_EN;
+	/* 
+	stream 6 - channel 5 USART6, medium priority,
+	8 bit data transfer, memory to peripheral mode,
+	memory increment mode;
+	*/
+	DMA2_Stream6->CR &= ~DMA_SxCR_CHSEL;
+	DMA2_Stream6->CR |= ((uint32_t)5)<<25;
+	DMA2_Stream6->CR |= DMA_SxCR_PL_0;
+	DMA2_Stream6->CR &= ~(DMA_SxCR_MSIZE|DMA_SxCR_PSIZE);
+	DMA2_Stream6->CR &= ~DMA_SxCR_DIR;
+	DMA2_Stream6->CR |= DMA_SxCR_DIR_0|DMA_SxCR_MINC|DMA_SxCR_TCIE;
+	DMA2_Stream6->PAR = (uint32_t)&(USART6->DR);
+	
 	/***********************************************************************/
 	/*ADC channel configuration*/
 	/*ch 1,2,4,5,6,7*/
@@ -72,29 +86,18 @@ void peripheral_config()
 	/*ADC1 on*/
 	ADC1->CR2 |= ADC_CR2_ADON;
 	/***********************************************************************/
-	/*USART3 configuration (serial in/out)*/
-	RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
-	/*1)enable USART*/
-	USART3->CR1 |= (USART_CR1_UE|USART_CR1_TE|USART_CR1_RE|USART_CR1_RXNEIE);
-	/*2)Program the M bit 1 start bit, 8 data bits*/
-	USART3->CR1 &= ~USART_CR1_M;
-	/*3)Program the number of stop bits (2 stop bits)*/
-	USART3->CR2 &= ~USART_CR2_STOP;
-	USART3->CR1 |=USART_CR2_STOP_1;
-	/*19200 baudrate, APB1 clock is 30 MHz*/
-	USART3->BRR = 0x61A;
-	/***********************************************************************/
 	/*USART6 configuration (RS-485)*/
 	RCC->APB2ENR |= RCC_APB2ENR_USART6EN;
 	/*1)enable USART*/
 	USART6->CR1 |= (USART_CR1_UE|USART_CR1_TE|USART_CR1_RE|USART_CR1_RXNEIE);
 	/*2)Program the M bit 1 start bit, 8 data bits*/
 	USART6->CR1 &= ~USART_CR1_M;
-	/*3)Program the number of stop bits (2 stop bits)*/
+	/*3)Program the number of stop bits (1 stop bits)*/
 	USART6->CR2 &= ~USART_CR2_STOP;
-	USART6->CR1 |=USART_CR2_STOP_1;
-	/*19200 baudrate, APB1 clock is 30 MHz*/
-	USART6->BRR = 0x61A;
+	//USART6->CR3 |=  USART_CR3_DMAT;
+	
+	/*19200 baudrate, APB2 clock is 60 MHz*/
+	USART6->BRR = 0xC35;
 }
 
 
@@ -105,6 +108,45 @@ void serial_send_byte(USART_TypeDef* port,const char byte)
 {
 	while(!(port->SR & USART_SR_TXE)); // if flag set "Transmit data register empty"
 	port->DR = byte;
+}
+
+/* name: DMA2_stream6_reload
+*  descriprion: reload DMA channel for serial transfer
+*/
+void DMA2_stream6_reload(uint32_t memory_adress,int new_buf_size)
+{
+	DMA2_Stream6->CR &= ~DMA_SxCR_EN;
+	DMA2_Stream6->M0AR &= ~(uint32_t)0xffffffff;
+	DMA2_Stream6->M0AR |= memory_adress;
+	DMA2_Stream6->NDTR = new_buf_size;
+	DMA2_Stream6->CR |= DMA_SxCR_EN;
+}
+/*
+ name: serial_send_array
+*  descriprion: template for serial port send array for io implementation
+*/
+void serial_send_array(const char *array,int size)
+{
+	
+}
+/*
+* name : mprintf
+* description : serial port write without CPU (DMA mode,etc) write array without interrupt
+*/
+int mprintf (const char *format,...)
+{
+	int size =0;
+	xSemaphoreTake(xMutex_serial_BUSY,portMAX_DELAY);
+	rs485_rts_on;
+	while(format[size]!= '\0')
+	{
+		serial_send_byte(serial_pointer,format[size]);
+		size++;
+	}
+	while(!(serial_pointer->SR & USART_SR_TC));
+	rs485_rts_off;
+	xSemaphoreGive(xMutex_serial_BUSY);
+	return 0; 
 }
 
 /* name: flash_data_write

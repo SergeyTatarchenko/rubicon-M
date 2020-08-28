@@ -18,10 +18,15 @@ ADC_CHANNELS_TypeDef ADC_CHANNELS;
 xQueueHandle service_serial_queue;
 xQueueHandle service_serial_reflection;
 xQueueHandle rs485_serial_queue;
+xSemaphoreHandle xMutex_serial_BUSY;
 
+
+char sp_buff[__STRLEN] = {0};
 
 /*default serial transmit is USART3*/
-USART_TypeDef * serial_pointer = USART3;
+//USART_TypeDef * serial_pointer = USART3;
+USART_TypeDef * serial_pointer = USART6;
+
 /*----------------------------------------------------------------------*/
 
 /* 

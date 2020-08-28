@@ -14,22 +14,21 @@ DEVICE_MODE mode = NORMAL;
 static uint16_t zone_0_treshold = 0;
 static uint16_t zone_1_treshold = 0;
 
-/* name: USART3_IRQHandler
-*  descriprion: interrupt handler for service serial port communication
+static uint8_t test_buffer[COMMAND_BUF_SIZE] = {0};
+/* name: USART6_IRQHandler
+*  descriprion: interrupt handler for RS 485 port communication
 */
-void USART3_IRQHandler()
+void USART6_IRQHandler()
 {
 	static uint8_t counter = 0;
 	static char buffer[COMMAND_BUF_SIZE] = {0};
 	char byte;
-	
 	/*data exist in DR register*/
-	if(USART3->SR &= USART_SR_RXNE)
+	if(USART6->SR &= USART_SR_RXNE)
 	{
-		byte = USART3->DR;
+		byte = USART6->DR;
 		if(byte != '\r')
 		{
-			//xQueueSendFromISR(service_serial_reflection,&byte,0);
 			/*input buffer oferflow error*/
 			if(counter == COMMAND_BUF_SIZE)
 			{
@@ -45,6 +44,7 @@ void USART3_IRQHandler()
 		}
 		else if(byte == '\r')
 		{
+
 			/*mode switching*/
 			switch(mode)
 			{
@@ -58,14 +58,15 @@ void USART3_IRQHandler()
 					mode = PROGRAMMING_SS;
 					break;
 				case PROGRAMMING_SS:
-					counter = 0;
 					/*send data to queue (command extracted in _task_service_serial function)*/
+					memcpy(test_buffer,buffer,COMMAND_BUF_SIZE);
 					xQueueSendFromISR(service_serial_queue,buffer,0);
 					memset(buffer,0,COMMAND_BUF_SIZE);
 					break;
 				default:
 					break;
 			}
+			counter = 0;
 		}
 	}
 }
@@ -88,11 +89,14 @@ void _task_service_mirror(void *pvParameters)
 */
 void _task_service_serial(void *pvParameters)
 {
+	static int a = 0;
 	const int tick_overload = 3600;
 	static uint8_t trigger = FALSE;
 	static int tick = 0;
 	TCmdTypeDef input_command;
 	char buffer[COMMAND_BUF_SIZE] = {0};
+	xMutex_serial_BUSY = xSemaphoreCreateMutex();
+	
 	while(TRUE)
 	{
 		if(tick > tick_overload)
@@ -119,9 +123,11 @@ void _task_service_serial(void *pvParameters)
 		if(uxQueueMessagesWaiting( service_serial_queue ) != 0)
 		{
 			xQueueReceive(service_serial_queue,&buffer,portMAX_DELAY);
+			mprintf("input command: ");
+			mprintf(buffer);
+			mprintf(__NEWLINE);
 			input_command = command_processing(buffer);
 			
-			/*trigger reset*/
 			if(input_command.command == C_EXIT)
 			{
 				trigger = FALSE;
@@ -131,11 +137,11 @@ void _task_service_serial(void *pvParameters)
 		/*send header message every 2s to terminal*/
 		if((mode == NORMAL ||mode == ALARM) && tick %40 == 0)
 		{
-			cprintf(__NEWLINE);
-			cprintf(__HEADER_MESSAGE);
+			mprintf(__NEWLINE);
+			mprintf(__HEADER_MESSAGE);
 		}
 		vTaskDelay(50);
-	 }
+	}
 }
 
 /* name: _task_led
@@ -193,11 +199,11 @@ void _task_state_update(void *pvParameters)
 			GetHwAdrState(&ADRESS);
 			GetHwModeState(&MODE);
 			GetHwOutState(&OUTPUTS);
+			rubicon_zone_thread(&CONFIG);
 			/*if TAPMER off set mode ALARM, swicth all outputs OFF, all fault LED ON*/
-			/*
 			if(!CheckTamperPin())
 			{
-				if(mode != PROGRAMMING_SS)
+				if((mode != PROGRAMMING_SS)&&(mode != DEBUG))
 				{
 					mode = ALARM;
 				}
@@ -207,14 +213,14 @@ void _task_state_update(void *pvParameters)
 			}
 			else
 			{
-				if(mode != PROGRAMMING_SS)
+				if((mode != PROGRAMMING_SS)&&(mode != DEBUG))
 				{
 					mode = NORMAL;
 				}
 				led_zone_0_err_off;
 				led_zone_1_err_off;
 			}
-			*/
+			
 		}
 		vTaskDelay(1);
 	}
@@ -266,13 +272,19 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 				/*zone 0 treshold exceed*/
 				if(ZONE_0_F1 > zone_0_treshold)
 				{
-					
+					if(zone_0_trigger == 0)
+					{
+						zone_0_trigger = 1;
+					}
 				}
 				break;
 			case FALSE:
 				if(ZONE_0_F2 > zone_0_treshold)
 				{
-					
+					if(zone_0_trigger == 0)
+					{
+						zone_0_trigger = 1;
+					}
 				}
 				break;
 		}
@@ -291,7 +303,7 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 				}
 			break;
 		case FALSE:
-				if(ZONE_1_F1 > zone_1_treshold)
+				if(ZONE_1_F2 > zone_1_treshold)
 				{
 					
 				}
@@ -312,8 +324,8 @@ void serial_command_executor (TCmdTypeDef command)
 		/*exit from programming mode*/
 		case C_EXIT:
 			mode = NORMAL;
-			cprintf(__OUT_MESSAGE);
-			cprintf(__POSLINE);
+			mprintf(__OUT_MESSAGE);
+			mprintf(__POSLINE);
 		break;
 		/*print help textblock*/
 		case C_HELP:
@@ -322,7 +334,7 @@ void serial_command_executor (TCmdTypeDef command)
 		WARNING!!! CPU stop during flash programming*/
 		case C_SAVE:
 			flash_data_write(CONFIG_FLASH_ADDRESS,CONFIG_SECTOR_NUMBER,CONFIG.array,sizeof(CONFIG));
-			cprintf("ok\r\n");
+			mprintf("ok\r\n");
 			break;
 		/*show something (see argument)*/
 		case C_SHOW:
@@ -341,8 +353,8 @@ void serial_command_executor (TCmdTypeDef command)
 					serial_print_config();
 					break;
 				default:
-					cprintf(__ERROR_MESSAGE);
-					cprintf(__NEWLINE);
+					mprintf(__ERROR_MESSAGE);
+					mprintf(__NEWLINE);
 					break;
 			}
 			break;
@@ -354,89 +366,89 @@ void serial_command_executor (TCmdTypeDef command)
 					if(command.value != 0)
 					{
 						CONFIG.data.zone_0_timeint = command.value;
-						cprintf("ok\r\n");
+						mprintf("ok\r\n");
 					}
 					else
 					{
-						cprintf(__ERROR_MESSAGE);
-						cprintf(__NEWLINE);
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
 					}
 					break;
 				case A_TIMEINT2:
 					if(command.value != 0)
 					{
 						CONFIG.data.zone_1_timeint = command.value;
-						cprintf("ok\r\n");
+						mprintf("ok\r\n");
 					}
 					else
 					{
-						cprintf(__ERROR_MESSAGE);
-						cprintf(__NEWLINE);
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
 					}
 					break;
 				case A_TRESHOLD1:
 					if(command.value != 0)
 					{
 						CONFIG.data.zone_0_treshold = command.value;
-						cprintf("ok\r\n");
+						mprintf("ok\r\n");
 					}
 					else
 					{
-						cprintf(__ERROR_MESSAGE);
-						cprintf(__NEWLINE);
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
 					}
 					break;
 				case A_TRESHOLD2:
 					if(command.value != 0)
 					{
 						CONFIG.data.zone_1_treshold = command.value;
-						cprintf("ok\r\n");
+						mprintf("ok\r\n");
 					}
 					else
 					{
-						cprintf(__ERROR_MESSAGE);
-						cprintf(__NEWLINE);
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
 					}
 					break;
 				case A_TRIGLIMIT1:
 					if(command.value != 0)
 					{
 						CONFIG.data.zone_0_triglimit = command.value;
-						cprintf("ok\r\n");
+						mprintf("ok\r\n");
 					}
 					else
 					{
-						cprintf(__ERROR_MESSAGE);
-						cprintf(__NEWLINE);
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
 					}
 					break;
 				case A_TRIGLIMIT2:
 					if(command.value != 0)
 					{
 						CONFIG.data.zone_1_triglimit = command.value;
-						cprintf("ok\r\n");
+						mprintf("ok\r\n");
 					}
 					else
 					{
-						cprintf(__ERROR_MESSAGE);
-						cprintf(__NEWLINE);
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
 					}
 					break;
 				default:
-					cprintf(__ERROR_MESSAGE);
-					cprintf(__NEWLINE);
+					mprintf(__ERROR_MESSAGE);
+					mprintf(__NEWLINE);
 					break;
 			}
 			break;
 		case C_DEBUG:
 			mode = DEBUG;
-			cprintf(__POSLINE);
-			cprintf("current adc values : \r\n");
+			mprintf(__POSLINE);
+			mprintf("current adc values : \r\n");
 			break;
 		/*error in input*/
 		case C_ERROR:
-			cprintf(__ERROR_MESSAGE);
-			cprintf(__NEWLINE);
+			mprintf(__ERROR_MESSAGE);
+			mprintf(__NEWLINE);
 			break;
 		default:
 			break;
@@ -481,37 +493,37 @@ void serial_debug_output( void )
 		ADC_CHANNELS.ch_6[i]+=0x30;
 		ADC_CHANNELS.ch_7[i]+=0x30;
 	}
-	cprintf(" adc ch 1 : ");
+	mprintf(" adc ch 1 : ");
 	for(int i = 0; i < 4; i++)
 	{
 		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_1[i]);
 	}
-	cprintf(" adc ch 2 : ");
+	mprintf(" adc ch 2 : ");
 	for(int i = 0; i < 4; i++)
 	{
 		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_2[i]);
 	}
-	cprintf(" adc ch 4 : ");
+	mprintf(" adc ch 4 : ");
 	for(int i = 0; i < 4; i++)
 	{
 		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_4[i]);
 	}
-	cprintf(" adc ch 5 : ");
+	mprintf(" adc ch 5 : ");
 	for(int i = 0; i < 4; i++)
 	{
 		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_5[i]);
 	}
-	cprintf(" adc ch 6 : ");
+	mprintf(" adc ch 6 : ");
 	for(int i = 0; i < 4; i++)
 	{
 		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_6[i]);
 	}
-	cprintf(" adc ch 7 : ");
+	mprintf(" adc ch 7 : ");
 	for(int i = 0; i < 4; i++)
 	{
 		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_7[i]);
 	}
-	cprintf("\r");
+	mprintf("\r");
 	
 }
 

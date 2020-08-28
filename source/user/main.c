@@ -31,7 +31,10 @@ int main()
 	{
 		/*enable global interrupt*/
 		__enable_irq ();
-		NVIC_EnableIRQ (USART3_IRQn);
+		
+		NVIC_EnableIRQ (USART6_IRQn);
+		//NVIC_EnableIRQ(DMA2_Stream6_IRQn);
+		
 		/*RTOS start here*/
 		vTaskStartScheduler();
 	}
@@ -112,7 +115,7 @@ void SysClkUpd( void )
     /* HCLK = SYSCLK / 1*/
     RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
       
-    /* PCLK2 = HCLK / 2*/
+    /* PCLK2 = HCLK / 4*/
     RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
     /* PCLK1 = HCLK / 4*/
     RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;

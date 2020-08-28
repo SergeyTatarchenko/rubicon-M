@@ -61,7 +61,7 @@ void terminal_print_txtblock(const char ( *buff )[__STRLEN], size_t strnum)
 {
 	for(int i = 0; i < strnum ; i++)
 	{
-		cprintf(buff[i]);
+		mprintf(buff[i]);
 	}
 }
 
@@ -73,7 +73,7 @@ void terminal_print_txtblock(const char ( *buff )[__STRLEN], size_t strnum)
 */
 TCmdTypeDef command_processing(char* buff)
 {
-	int num_of_symbols = 0;
+int num_of_symbols = 0;
 	int CmdWithArg = 0;
 	char command[COMMAND_BUF_SIZE] = {0},
 		arg_1[COMMAND_BUF_SIZE] = {0},
@@ -183,9 +183,9 @@ TCmdTypeDef command_processing(char* buff)
 	switch(out.command)
 	{
 		case C_HELP:
-			cprintf(__POSLINE);
+			mprintf(__POSLINE);
 			terminal_print_txtblock(help_text,16);
-			cprintf(__POSLINE);
+			mprintf(__POSLINE);
 			break;
 		
 		default:
@@ -211,34 +211,6 @@ int command_parser(char* buff_1,const char* buff_2)
 	}
 	return command_matced;
 }
-
-/*
-* name : cprintf
-* description : serial port write, use CPU, single byte interrupt
-*/
-int cprintf (const char *format,...)
-{
-    uint8_t i = 0;
-    do
-    {
-        serial_send_byte(serial_pointer,format[i]);
-        i++;
-    }
-    while(format[i]!= '\0');
-    
-    return 0; 
-}
-
-/*
-* name : mprintf
-* description : serial port write without CPU (DMA mode,etc) write array without interrupt
-*/
-int mprintf (const char *format, int size)
-{
-	serial_send_array(format,size);
-	return 0; 
-}
-
 /*
 * name : itoa
 * description : convert integer to array
@@ -336,63 +308,63 @@ void serial_print_adress()
 {
 	char address_txt[3];
 	itoa(ADRESS.byte,address_txt,3);
-	cprintf(__POSLINE);
-	cprintf("Текущий адрес устройства в сети : ");
+	mprintf(__POSLINE);
+	mprintf("Текущий адрес устройства в сети : ");
 	for(int i = 0; i < 3; i++)
 	{
 		serial_send_byte(serial_pointer,address_txt[i] +0x30);
 	}
-	cprintf(__NEWLINE);
-	cprintf(__POSLINE);
+	mprintf(__NEWLINE);
+	mprintf(__POSLINE);
 }
 
 void serial_print_state( void )
 {
-	cprintf(__POSLINE);
-	cprintf("Текущее состояние зон:\r\n");
-	cprintf(" Зона 1 тревога : ");
+	mprintf(__POSLINE);
+	mprintf("Текущее состояние зон:\r\n");
+	mprintf(" Зона 1 тревога : ");
 	
 	if(OUTPUTS.bit.zone_0_alarm == 1)
 	{
-		cprintf("Да");
+		mprintf("Да");
 	}
 	else
 	{
-		cprintf("Нет");
+		mprintf("Нет");
 	}
-	cprintf(__NEWLINE);
-	cprintf(" Зона 1 ошибка  : ");
+	mprintf(__NEWLINE);
+	mprintf(" Зона 1 ошибка  : ");
 	if(OUTPUTS.bit.zone_0_error == 1)
 	{
-		cprintf("Да");
+		mprintf("Да");
 	}
 	else
 	{
-		cprintf("Нет");
+		mprintf("Нет");
 	}
-	cprintf(__NEWLINE);
-	cprintf(" Зона 2 тревога : ");
+	mprintf(__NEWLINE);
+	mprintf(" Зона 2 тревога : ");
 	
 	if(OUTPUTS.bit.zone_1_alarm == 1)
 	{
-		cprintf("Да");
+		mprintf("Да");
 	}
 	else
 	{
-		cprintf("Нет");
+		mprintf("Нет");
 	}
-	cprintf(__NEWLINE);
-	cprintf(" Зона 2 ошибка  : ");
+	mprintf(__NEWLINE);
+	mprintf(" Зона 2 ошибка  : ");
 	if(OUTPUTS.bit.zone_1_error == 1)
 	{
-		cprintf("Да");
+		mprintf("Да");
 	}
 	else
 	{
-		cprintf("Нет");
+		mprintf("Нет");
 	}
-	cprintf(__NEWLINE);
-	cprintf(__POSLINE);
+	mprintf(__NEWLINE);
+	mprintf(__POSLINE);
 }
 
 
@@ -400,131 +372,131 @@ void serial_print_config()
 {
 	const int array_size = 5;
 	char array[array_size];
-	cprintf(__NEWLINE);
-	cprintf(__POSLINE);
-	cprintf("ТЕКУЩАЯ КОНФИГУРАЦИЯ СИСТЕМЫ :\r\n");
+	mprintf(__NEWLINE);
+	mprintf(__POSLINE);
+	mprintf("ТЕКУЩАЯ КОНФИГУРАЦИЯ СИСТЕМЫ :\r\n");
 	/********************************************/
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_0_timeint,array,array_size);
-	cprintf("Временное окно зоны 1, мс : ");
+	mprintf("Временное окно зоны 1, мс : ");
 	for(int i = 0; i < array_size; i++)
 	{
 		serial_send_byte(serial_pointer,array[i] +0x30);
 	}
 	memset(array,0,array_size);
 	/********************************************/
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_1_timeint,array,array_size);
-	cprintf("Временное окно зоны 2, мс : ");
+	mprintf("Временное окно зоны 2, мс : ");
 	for(int i = 0; i < array_size; i++)
 	{
 		serial_send_byte(serial_pointer,array[i] +0x30);
 	}
 	memset(array,0,array_size);
 	/********************************************/
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	/********************************************/
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_0_treshold,array,array_size);
-	cprintf("Порог срабатывания зоны 1, мВ : ");
+	mprintf("Порог срабатывания зоны 1, мВ : ");
 	for(int i = 0; i < array_size; i++)
 	{
 		serial_send_byte(serial_pointer,array[i] +0x30);
 	}
 	memset(array,0,array_size);
 	/********************************************/
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_1_treshold,array,array_size);
-	cprintf("Порог срабатывания зоны 2, мВ : ");
+	mprintf("Порог срабатывания зоны 2, мВ : ");
 	for(int i = 0; i < array_size; i++)
 	{
 		serial_send_byte(serial_pointer,array[i] +0x30);
 	}
 	memset(array,0,array_size);
 	/********************************************/
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	/********************************************/
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_0_triglimit,array,array_size);
-	cprintf("Предельное число срабатываний за интервал зоны 1 : ");
+	mprintf("Предельное число срабатываний за интервал зоны 1 : ");
 	for(int i = 0; i < array_size; i++)
 	{
 		serial_send_byte(serial_pointer,array[i] +0x30);
 	}
 	memset(array,0,array_size);
 	/********************************************/
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_1_triglimit,array,array_size);
-	cprintf("Предельное число срабатываний за интервал зоны 2 : ");
+	mprintf("Предельное число срабатываний за интервал зоны 2 : ");
 	for(int i = 0; i < array_size; i++)
 	{
 		serial_send_byte(serial_pointer,array[i] +0x30);
 	}
 	memset(array,0,array_size);
 	/********************************************/
-	cprintf(__NEWLINE);
-	cprintf(__POSLINE);
+	mprintf(__NEWLINE);
+	mprintf(__POSLINE);
 }
 
 void serial_print_mode()
 {
-	cprintf(__POSLINE);
-	cprintf("Текущее состояние системы:\r\n");
-	cprintf(" Контроль зоны 1 : ");
+	mprintf(__POSLINE);
+	mprintf("Текущее состояние системы:\r\n");
+	mprintf(" Контроль зоны 1 : ");
 	
 	if(MODE.bit.zone0_enable == 0)
 	{
-		cprintf("Активен");
+		mprintf("Активен");
 	}
 	else
 	{
-		cprintf("Отключен");
+		mprintf("Отключен");
 	}
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	
-	cprintf(" Режим работы зоны 1 : ");
+	mprintf(" Режим работы зоны 1 : ");
 	if(MODE.bit.zone0_mode == 1)
 	{
-		cprintf("Легкий тип ограждения");
+		mprintf("Легкий тип ограждения");
 	}
 	else
 	{
-		cprintf("Тяжелый тип ограждения");
+		mprintf("Тяжелый тип ограждения");
 	}
-	cprintf(__NEWLINE);
-	cprintf(" Контроль зоны 2 : ");
+	mprintf(__NEWLINE);
+	mprintf(" Контроль зоны 2 : ");
 	
 	if(MODE.bit.zone1_enable == 0)
 	{
-		cprintf("Активен");
+		mprintf("Активен");
 	}
 	else
 	{
-		cprintf("Отключен");
+		mprintf("Отключен");
 	}
-	cprintf(__NEWLINE);
+	mprintf(__NEWLINE);
 	
-	cprintf(" Режим работы зоны 2 : ");
+	mprintf(" Режим работы зоны 2 : ");
 	if(MODE.bit.zone1_mode == 1)
 	{
-		cprintf("Легкий тип ограждения");
+		mprintf("Легкий тип ограждения");
 	}
 	else
 	{
-		cprintf("Тяжелый тип ограждения");
+		mprintf("Тяжелый тип ограждения");
 	}
-	cprintf(__NEWLINE);
-	cprintf(__POSLINE);
+	mprintf(__NEWLINE);
+	mprintf(__POSLINE);
 }
 
 void serial_print_welcome()
 {
-	cprintf(__POSLINE);
-	cprintf("Система контроля периметра <<РУБИКОН>>\n\r");
-	cprintf("Версия программного обеспечения: ");
-	cprintf(VERSION);
-	cprintf(__NEWLINE);
-	cprintf("Для справки введите help и нажмите Enter\n\r");
-	cprintf("Для выхода введите exit и нажмите Enter\n\r");
-	cprintf(__POSLINE);
+	mprintf(__POSLINE);
+	mprintf("Система контроля периметра <<РУБИКОН>>\n\r");
+	mprintf("Версия программного обеспечения: ");
+	mprintf(VERSION);
+	mprintf(__NEWLINE);
+	mprintf("Для справки введите help и нажмите Enter\n\r");
+	mprintf("Для выхода введите exit и нажмите Enter\n\r");
+	mprintf(__POSLINE);
 }

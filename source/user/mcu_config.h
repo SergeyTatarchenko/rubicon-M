@@ -85,6 +85,10 @@ sector #3 16KB size, 48KB limit flash memory for user program
 #define service_rts_on		(GPIOB->BSRR |=GPIO_BSRR_BS_12)
 #define service_rts_off		(GPIOB->BSRR |=GPIO_BSRR_BR_12)
 
+/*RS 485*/
+#define rs485_rts_on		(GPIOC->BSRR |=GPIO_BSRR_BS_8)
+#define rs485_rts_off		(GPIOC->BSRR |=GPIO_BSRR_BR_8)
+
 /*adc*/
 #define num_of_adc_conversion 6
 #define ADC_START	ADC1->CR2 |= ADC_CR2_SWSTART
@@ -101,5 +105,7 @@ void sys_init(void);
 void flash_data_write(const uint32_t address,int sector, const uint32_t *data,int size);
 void flash_data_read(const uint32_t address, uint32_t *data,int size);
 
+int mprintf (const char *format,...);
+void DMA2_stream6_reload(uint32_t memory_adress,int new_buf_size);
 
 #endif

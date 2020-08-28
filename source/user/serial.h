@@ -57,9 +57,6 @@ typedef struct {
 
 
 /*---------------------local function prototypes------------------------------*/
-
-int cprintf (const char *format,...);
-int mprintf (const char *format, int size);
 uint32_t itoa(int i,char *buff,uint8_t MesSize);
 uint32_t chatoi(char *buff,int size);
 
