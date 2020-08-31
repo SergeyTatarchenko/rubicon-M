@@ -74,6 +74,8 @@ void serial_print_adress( void );
 void serial_print_config( void );
 void serial_print_mode( void );
 void serial_print_welcome( void );
+void serial_debug_output( void );
+void serial_command_executor ( TCmdTypeDef command );
 
 #endif
 /****************************end of file ********************************/

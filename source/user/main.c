@@ -58,19 +58,15 @@ BaseType_t Init_()
 	MEM_ALLOCATION.stack_user = 512;
 	MEM_ALLOCATION.stack_serial = 256;
 	
+	/*queue for service serial port*/
+	service_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,COMMAND_BUF_SIZE);
+	
 	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
 									NULL, MEM_ALLOCATION.user_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
 									NULL, MEM_ALLOCATION.user_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",MEM_ALLOCATION.stack_serial,
 									NULL, MEM_ALLOCATION.serial_priority , NULL );
-	/*
-	TaskCreation &= xTaskCreate(&_task_service_mirror ,"serial mirror",MEM_ALLOCATION.stack_serial,
-									NULL, MEM_ALLOCATION.serial_priority , NULL );
-	*/
-	/*queue for service serial port*/
-	service_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,COMMAND_BUF_SIZE);
-	service_serial_reflection = xQueueCreate(1,COMMAND_BUF_SIZE);
 	
 	return TaskCreation;
 }

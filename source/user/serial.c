@@ -10,47 +10,50 @@
 /*terminal commands version 0.1*/
 
 /*user commands for array compare*/
-static const char user_commands[NUM_OF_COMMANDS][COMMAND_BUF_SIZE] = {
-{__EXIT},
-{__HELP},
-{__SAVE},
-{__SHOW},
-{__SET},
-{__DEBUG}
+static const char user_commands[NUM_OF_COMMANDS][COMMAND_BUF_SIZE] = 
+{
+	{__EXIT},
+	{__HELP},
+	{__SAVE},
+	{__SHOW},
+	{__SET},
+	{__DEBUG}
 };
 
 /*user args for array compare*/
-static const char user_arguments[NUM_OF_ARGUMENTS][COMMAND_BUF_SIZE] = {
-{__MODE},
-{__ADDRESS},
-{__STATE},
-{__CONFIG},
-{__TRESHOLD1},
-{__TRESHOLD2},
-{__TIMEINT1},
-{__TIMEINT2},
-{__TRIGLIMIT1},
-{__TRIGLIMIT2}
+static const char user_arguments[NUM_OF_ARGUMENTS][COMMAND_BUF_SIZE] = 
+{
+	{__MODE},
+	{__ADDRESS},
+	{__STATE},
+	{__CONFIG},
+	{__TRESHOLD1},
+	{__TRESHOLD2},
+	{__TIMEINT1},
+	{__TIMEINT2},
+	{__TRIGLIMIT1},
+	{__TRIGLIMIT2}
 };
 
 /*help textblock for print with terminal*/
-static const char help_text[16][__STRLEN]={
-{__HELP_BLOCK_0},
-{__HELP_BLOCK_1},
-{__HELP_BLOCK_2},
-{__HELP_BLOCK_3},
-{__HELP_BLOCK_4},
-{__HELP_BLOCK_5},
-{__HELP_BLOCK_6},
-{__HELP_BLOCK_7},
-{__HELP_BLOCK_8},
-{__HELP_BLOCK_9},
-{__HELP_BLOCK_10},
-{__HELP_BLOCK_11},
-{__HELP_BLOCK_12},
-{__HELP_BLOCK_13},
-{__HELP_BLOCK_14},
-{__HELP_BLOCK_15}
+static const char help_text[16][__STRLEN]=
+{
+	{__HELP_BLOCK_0},
+	{__HELP_BLOCK_1},
+	{__HELP_BLOCK_2},
+	{__HELP_BLOCK_3},
+	{__HELP_BLOCK_4},
+	{__HELP_BLOCK_5},
+	{__HELP_BLOCK_6},
+	{__HELP_BLOCK_7},
+	{__HELP_BLOCK_8},
+	{__HELP_BLOCK_9},
+	{__HELP_BLOCK_10},
+	{__HELP_BLOCK_11},
+	{__HELP_BLOCK_12},
+	{__HELP_BLOCK_13},
+	{__HELP_BLOCK_14},
+	{__HELP_BLOCK_15}
 }; 
 
 /*
@@ -193,7 +196,146 @@ int num_of_symbols = 0;
 	}
 	return out;
 }
-
+/* name: serial_command_executor
+*  descriprion: execute commands from terminal in service serial task
+*/
+void serial_command_executor (TCmdTypeDef command)
+{
+	switch(command.command)
+	{
+		/*exit from programming mode*/
+		case C_EXIT:
+			mode = NORMAL;
+			mprintf(__OUT_MESSAGE);
+			mprintf(__POSLINE);
+		break;
+		/*print help textblock*/
+		case C_HELP:
+			break;
+		/*save current config to flash
+		WARNING!!! CPU stop during flash programming*/
+		case C_SAVE:
+			flash_data_write(CONFIG_FLASH_ADDRESS,CONFIG_SECTOR_NUMBER,CONFIG.array,sizeof(CONFIG));
+			mprintf("ok\r\n");
+			break;
+		/*show something (see argument)*/
+		case C_SHOW:
+			switch(command.argument)
+			{
+				case A_ADDRESS:
+					serial_print_adress();
+					break;
+				case A_MODE:
+					serial_print_mode();
+					break;
+				case A_STATE:
+					serial_print_state();
+					break;
+				case A_CONFIG:
+					serial_print_config();
+					break;
+				default:
+					mprintf(__ERROR_MESSAGE);
+					mprintf(__NEWLINE);
+					break;
+			}
+			break;
+		/*set value for some parameter (see argument)*/
+		case C_SET:
+			switch(command.argument)
+			{
+				case A_TIMEINT1:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_0_timeint = command.value;
+						mprintf("ok\r\n");
+					}
+					else
+					{
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
+					}
+					break;
+				case A_TIMEINT2:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_1_timeint = command.value;
+						mprintf("ok\r\n");
+					}
+					else
+					{
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
+					}
+					break;
+				case A_TRESHOLD1:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_0_treshold = command.value;
+						mprintf("ok\r\n");
+					}
+					else
+					{
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
+					}
+					break;
+				case A_TRESHOLD2:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_1_treshold = command.value;
+						mprintf("ok\r\n");
+					}
+					else
+					{
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
+					}
+					break;
+				case A_TRIGLIMIT1:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_0_triglimit = command.value;
+						mprintf("ok\r\n");
+					}
+					else
+					{
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
+					}
+					break;
+				case A_TRIGLIMIT2:
+					if(command.value != 0)
+					{
+						CONFIG.data.zone_1_triglimit = command.value;
+						mprintf("ok\r\n");
+					}
+					else
+					{
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
+					}
+					break;
+				default:
+					mprintf(__ERROR_MESSAGE);
+					mprintf(__NEWLINE);
+					break;
+			}
+			break;
+		case C_DEBUG:
+			mode = DEBUG;
+			mprintf(__POSLINE);
+			mprintf("current adc values : \r\n");
+			break;
+		/*error in input*/
+		case C_ERROR:
+			mprintf(__ERROR_MESSAGE);
+			mprintf(__NEWLINE);
+			break;
+		default:
+			break;
+	}
+}
 /*
 * name : command_parser
 * description : compare user string with array, return 1 if it match
@@ -304,16 +446,72 @@ void __attribute__((weak)) serial_send_array(const char *array,int size)
 /**********************
 LOCAL PRINT FUNCTIONS
 **********************/
+/* name: serial_debug_output
+*  descriprion: debug output from ADC channels
+*/
+void serial_debug_output( void )
+{
+	itoa(ADC_VALUES.alrm_0,ADC_CHANNELS.ch_1,4);
+	itoa(ADC_VALUES.alrm_1,ADC_CHANNELS.ch_2,4);
+	itoa(ADC_VALUES.sign_0,ADC_CHANNELS.ch_4,4);
+	itoa(ADC_VALUES.sign_1,ADC_CHANNELS.ch_5,4);
+	itoa(ADC_VALUES.sign_2,ADC_CHANNELS.ch_6,4);
+	itoa(ADC_VALUES.sign_3,ADC_CHANNELS.ch_7,4);
+	for(int i = 0;i < 4; i++)
+	{
+		ADC_CHANNELS.ch_1[i]+=0x30;
+		ADC_CHANNELS.ch_2[i]+=0x30;
+		ADC_CHANNELS.ch_4[i]+=0x30;
+		ADC_CHANNELS.ch_5[i]+=0x30;
+		ADC_CHANNELS.ch_6[i]+=0x30;
+		ADC_CHANNELS.ch_7[i]+=0x30;
+	}
+	mprintf(" adc ch 1 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_1[i]);
+	}
+	mprintf(" adc ch 2 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_2[i]);
+	}
+	mprintf(" adc ch 4 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_4[i]);
+	}
+	mprintf(" adc ch 5 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_5[i]);
+	}
+	mprintf(" adc ch 6 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_6[i]);
+	}
+	mprintf(" adc ch 7 : ");
+	for(int i = 0; i < 4; i++)
+	{
+		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_7[i]);
+	}
+	mprintf("\r");
+	
+}
+
 void serial_print_adress()
 {
 	char address_txt[3];
-	itoa(ADRESS.byte,address_txt,3);
+	itoa(ADDRESS.byte,address_txt,3);
 	mprintf(__POSLINE);
 	mprintf("Текущий адрес устройства в сети : ");
+	
 	for(int i = 0; i < 3; i++)
 	{
-		serial_send_byte(serial_pointer,address_txt[i] +0x30);
+		address_txt[i]+=0x30;
 	}
+	mprintf(address_txt);
 	mprintf(__NEWLINE);
 	mprintf(__POSLINE);
 }
@@ -381,8 +579,9 @@ void serial_print_config()
 	mprintf("Временное окно зоны 1, мс : ");
 	for(int i = 0; i < array_size; i++)
 	{
-		serial_send_byte(serial_pointer,array[i] +0x30);
+		array[i]+=0x30;
 	}
+	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
 	mprintf(__NEWLINE);
@@ -390,8 +589,9 @@ void serial_print_config()
 	mprintf("Временное окно зоны 2, мс : ");
 	for(int i = 0; i < array_size; i++)
 	{
-		serial_send_byte(serial_pointer,array[i] +0x30);
+		array[i]+=0x30;
 	}
+	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
 	mprintf(__NEWLINE);
@@ -401,8 +601,9 @@ void serial_print_config()
 	mprintf("Порог срабатывания зоны 1, мВ : ");
 	for(int i = 0; i < array_size; i++)
 	{
-		serial_send_byte(serial_pointer,array[i] +0x30);
+		array[i]+=0x30;
 	}
+	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
 	mprintf(__NEWLINE);
@@ -410,8 +611,9 @@ void serial_print_config()
 	mprintf("Порог срабатывания зоны 2, мВ : ");
 	for(int i = 0; i < array_size; i++)
 	{
-		serial_send_byte(serial_pointer,array[i] +0x30);
+		array[i]+=0x30;
 	}
+	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
 	mprintf(__NEWLINE);
@@ -421,8 +623,9 @@ void serial_print_config()
 	mprintf("Предельное число срабатываний за интервал зоны 1 : ");
 	for(int i = 0; i < array_size; i++)
 	{
-		serial_send_byte(serial_pointer,array[i] +0x30);
+		array[i]+=0x30;
 	}
+	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
 	mprintf(__NEWLINE);
@@ -430,8 +633,9 @@ void serial_print_config()
 	mprintf("Предельное число срабатываний за интервал зоны 2 : ");
 	for(int i = 0; i < array_size; i++)
 	{
-		serial_send_byte(serial_pointer,array[i] +0x30);
+		array[i]+=0x30;
 	}
+	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
 	mprintf(__NEWLINE);

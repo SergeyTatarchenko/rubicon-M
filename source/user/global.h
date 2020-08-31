@@ -140,6 +140,16 @@ typedef struct{
 }MEM_ALLOCATION_TypeDef;
 
 
+typedef enum
+{
+	NORMAL,
+	IDLE,
+	PROGRAMMING_SS,
+	ALARM,
+	DEBUG,
+	FAULT
+}DEVICE_MODE;
+
 #define ZONE_0_F1	ADC_VALUES.sign_0
 #define ZONE_0_F2	ADC_VALUES.sign_1
 
@@ -147,7 +157,7 @@ typedef struct{
 #define ZONE_1_F2	ADC_VALUES.sign_3
 /*----------------------------------------------------------------------*/
 
-extern ADDRESS_TypeDef ADRESS;
+extern ADDRESS_TypeDef ADDRESS;
 extern MODE_TypeDef MODE;
 extern OUTPUTS_TypeDef OUTPUTS;
 extern CONFIG_TypeDef CONFIG;
@@ -165,10 +175,15 @@ extern xQueueHandle rs485_serial_queue;
 
 extern xSemaphoreHandle xMutex_serial_BUSY;
 extern char sp_buff[__STRLEN];
+
+extern DEVICE_MODE mode;
+
 /*----------------------------------------------------------------------*/
 void GetHwAdrState( ADDRESS_TypeDef* state );
 void GetHwModeState( MODE_TypeDef *state );
 void GetHwOutState ( OUTPUTS_TypeDef* state);
 int CheckTamperPin( void );
+uint16_t adc_covert_from_mv(uint16_t value);
+uint16_t adc_covert_to_mv(uint16_t value);
 #endif
 /****************************end of file ********************************/

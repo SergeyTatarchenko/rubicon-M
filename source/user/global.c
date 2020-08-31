@@ -8,7 +8,7 @@
 
 /*----------------------------------------------------------------------*/
 /*extern used*/
-ADDRESS_TypeDef ADRESS;
+ADDRESS_TypeDef ADDRESS;
 MODE_TypeDef MODE;
 OUTPUTS_TypeDef OUTPUTS;
 CONFIG_TypeDef CONFIG;
@@ -16,10 +16,10 @@ ADC_VALUES_TypeDef ADC_VALUES;
 ADC_CHANNELS_TypeDef ADC_CHANNELS;
 
 xQueueHandle service_serial_queue;
-xQueueHandle service_serial_reflection;
-xQueueHandle rs485_serial_queue;
+xQueueHandle kso_serial_queue;
 xSemaphoreHandle xMutex_serial_BUSY;
 
+DEVICE_MODE mode = NORMAL;
 
 char sp_buff[__STRLEN] = {0};
 
@@ -81,5 +81,21 @@ int CheckTamperPin()
 		return 1;
 	}
 }
+/* name: adc_covert_from_mv
+*  descriprion: convert value in mV to ADC output format
+*/
+uint16_t adc_covert_from_mv(uint16_t value)
+{
+	uint16_t data = (ADC_DEPTH*value)/INT_ADC_REF;
+	return data;
+}
 
+/* name: adc_covert_to_mv
+*  descriprion: convert value from ADC DR to mV
+*/
+uint16_t adc_covert_to_mv(uint16_t value)
+{
+	uint16_t data = (INT_ADC_REF*value)/ADC_DEPTH;
+	return data;
+}
 /****************************end of file ********************************/

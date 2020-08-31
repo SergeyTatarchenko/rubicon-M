@@ -31,8 +31,6 @@ void peripheral_config()
 {
 	/*DMA2 clock*/
 	RCC->AHB1ENR|= RCC_AHB1ENR_DMA2EN;
-	/*DMA1 clock*/
-	RCC->AHB1ENR|= RCC_AHB1ENR_DMA1EN;
 	/* 
 	stream 0 - channel 0 ADC, high priority,
 	16 bit data transfer, peripheral to memory mode,
