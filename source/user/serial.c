@@ -54,8 +54,19 @@ static const char help_text[16][__STRLEN]=
 	{__HELP_BLOCK_13},
 	{__HELP_BLOCK_14},
 	{__HELP_BLOCK_15}
-}; 
-
+};
+/*welcome textblock for print with terminal*/
+static const char welcome_text[8][__STRLEN] = 
+{
+	{__WELCOME_BLOCK_0},
+	{__WELCOME_BLOCK_1},
+	{__WELCOME_BLOCK_2},
+	{__WELCOME_BLOCK_3},
+	{__WELCOME_BLOCK_4},
+	{__WELCOME_BLOCK_5},
+	{__WELCOME_BLOCK_6},
+	{__WELCOME_BLOCK_7}
+};
 /*
 * name : terminal_print_txtblock
 * description : print text block from two-dimm array (STATIC only!!, lenght defined as __STRLEN)
@@ -183,17 +194,6 @@ int num_of_symbols = 0;
 			out.value = chatoi(arg_2,COMMAND_BUF_SIZE);
 		}
 	}
-	switch(out.command)
-	{
-		case C_HELP:
-			mprintf(__POSLINE);
-			terminal_print_txtblock(help_text,16);
-			mprintf(__POSLINE);
-			break;
-		
-		default:
-			break;
-	}
 	return out;
 }
 /* name: serial_command_executor
@@ -211,6 +211,9 @@ void serial_command_executor (TCmdTypeDef command)
 		break;
 		/*print help textblock*/
 		case C_HELP:
+			mprintf(__POSLINE);
+			terminal_print_txtblock(help_text,16);
+			mprintf(__POSLINE);
 			break;
 		/*save current config to flash
 		WARNING!!! CPU stop during flash programming*/
@@ -695,12 +698,5 @@ void serial_print_mode()
 
 void serial_print_welcome()
 {
-	mprintf(__POSLINE);
-	mprintf("Система контроля периметра <<РУБИКОН>>\n\r");
-	mprintf("Версия программного обеспечения: ");
-	mprintf(VERSION);
-	mprintf(__NEWLINE);
-	mprintf("Для справки введите help и нажмите Enter\n\r");
-	mprintf("Для выхода введите exit и нажмите Enter\n\r");
-	mprintf(__POSLINE);
+	terminal_print_txtblock(welcome_text,8);
 }

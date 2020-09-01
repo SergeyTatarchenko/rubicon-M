@@ -12,8 +12,6 @@
 static uint16_t zone_0_treshold = 0;
 static uint16_t zone_1_treshold = 0;
 
-static uint8_t test_buffer[COMMAND_BUF_SIZE] = {0};
-
 void serial_data_proc( char byte );
 void def_data_proc( char byte );
 void mode_switcher( char byte );
@@ -23,7 +21,6 @@ void mode_switcher( char byte );
 */
 void USART6_IRQHandler()
 {
-	static int switch_mode_cnt = 0;
 	char byte;
 	/*data exist in DR register*/
 	if(USART6->SR &= USART_SR_RXNE)
@@ -89,6 +86,10 @@ void mode_switcher( char byte )
 */
 void def_data_proc(char byte)
 {
+	static int counter = 0;
+	static char buffer[sizeof(RUBICON_CONTROL_MESSAGE_TypaDef)] = {0};
+	/*message header check*/
+	
 }
 
 /* name: serial_data_proc
@@ -126,7 +127,6 @@ void serial_data_proc(char byte)
 				break;
 			case PROGRAMMING_SS:
 					/*send data to queue (command extracted in _task_service_serial function)*/
-				memcpy(test_buffer,buffer,COMMAND_BUF_SIZE);
 				xQueueSendFromISR(service_serial_queue,buffer,0);
 				memset(buffer,0,COMMAND_BUF_SIZE);
 				break;
@@ -257,8 +257,6 @@ void _task_state_update(void *pvParameters)
 		{
 			tick++;
 		}
-		
-		rubicon_zone_thread(&CONFIG);
 		if(tick%STATE_UPDATE_RATE == 0)
 		{
 			/*update all hw states*/
@@ -286,6 +284,10 @@ void _task_state_update(void *pvParameters)
 				led_zone_0_err_off;
 				led_zone_1_err_off;
 			}
+		}
+		if((mode == NORMAL)||(mode == DEBUG))
+		{
+			rubicon_zone_thread(&CONFIG);
 		}
 		vTaskDelay(1);
 	}

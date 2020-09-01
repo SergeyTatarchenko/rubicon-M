@@ -4,9 +4,6 @@
 * Version            : v 1.0
 * Description        : main progran file
 *************************************************************************/
-
-#include "mcu_config.h"
-#include "RTOS.h"
 #include "user_tasks.h"
 /*----------------------------------------------------------------------*/
 
@@ -60,6 +57,7 @@ BaseType_t Init_()
 	
 	/*queue for service serial port*/
 	service_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,COMMAND_BUF_SIZE);
+	kso_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,sizeof(RUBICON_CONTROL_MESSAGE_TypaDef));
 	
 	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
 									NULL, MEM_ALLOCATION.user_priority , NULL );

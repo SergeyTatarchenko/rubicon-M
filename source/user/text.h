@@ -10,6 +10,10 @@
 #define __WHITESPACE 0x20
 #define __STRLEN	256
 
+#define __POSLINE			"***************************************************\n\r" 
+#define __NEWLINE			"\r\n"
+
+
 #define __HEADER_MESSAGE	"Нажмите Enter для входа в режим конфигурации...\r\n"
 #define __ERROR_MESSAGE		"Неверная команда, попробуйте еще раз"
 #define __OUT_MESSAGE		"Выход из режима конфигурации...\r\n"
@@ -31,10 +35,17 @@
 #define __HELP_BLOCK_14		"triglimit1 - граничное значение превышений порога за временной интервал зоны 1;\r\n"
 #define __HELP_BLOCK_15		"triglimit2 - граничное значение превышений порога за временной интервал зоны 2;\r\n"
 
+#define __WELCOME_BLOCK_0 	__POSLINE
+#define __WELCOME_BLOCK_1 	"Система контроля периметра <<РУБИКОН>>\n\r"
+#define __WELCOME_BLOCK_2 	"Версия программного обеспечения: "
+#define __WELCOME_BLOCK_3 	VERSION
+#define __WELCOME_BLOCK_4 	__NEWLINE
+#define __WELCOME_BLOCK_5 	"Для справки введите help и нажмите Enter\n\r"
+#define __WELCOME_BLOCK_6 	"Для выхода введите exit и нажмите Enter\n\r"
+#define __WELCOME_BLOCK_7 	__POSLINE
 
 
-#define __POSLINE			"***************************************************\n\r" 
-#define __NEWLINE			"\r\n"
+
 
 /*commands*/
 #define __EXIT	'e','x','i','t'

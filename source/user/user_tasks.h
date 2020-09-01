@@ -11,6 +11,7 @@
 #include "RTOS.h"
 #include "serial.h"
 #include "text.h"
+#include "rubicon_777.h"
 /*----------------------------------------------------------------------*/
 #define STATE_UPDATE_RATE	20
 #define SERIAL_UPDATE_RATE	50
@@ -20,9 +21,6 @@ void _task_led(void *pvParameters);
 void _task_state_update(void *pvParameters);
 void _task_service_serial(void *pvParameters);
 /*----------------------------------------------------------------------*/
-
-
-
 DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration);
 
 #define SWITCH_SEQ_LENGHT	4
