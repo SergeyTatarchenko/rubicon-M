@@ -22,7 +22,8 @@ xSemaphoreHandle xMutex_serial_BUSY;
 DEVICE_MODE mode = NORMAL;
 USART_TypeDef * serial_pointer = USART6;
 /*----------------------------------------------------------------------*/
-static const uint8_t Crc8Table[256] = {
+static const uint8_t Crc8Table[256] = 
+{
         0x00, 0x5E, 0xBC, 0xE2, 0x61, 0x3F, 0xDD, 0x83,
         0xC2, 0x9C, 0x7E, 0x20, 0xA3, 0xFD, 0x1F, 0x41,
         0x9D, 0xC3, 0x21, 0x7F, 0xFC, 0xA2, 0x40, 0x1E,
@@ -115,11 +116,11 @@ int CheckTamperPin()
 	int signal = (GPIOA->IDR & GPIO_IDR_IDR_15);
 	if(signal != 0)
 	{
-		return 0;
+		return FALSE;
 	}
 	else
 	{
-		return 1;
+		return TRUE;
 	}
 }
 /* name: adc_covert_from_mv

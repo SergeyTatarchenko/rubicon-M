@@ -20,6 +20,7 @@
 void _task_led(void *pvParameters);
 void _task_state_update(void *pvParameters);
 void _task_service_serial(void *pvParameters);
+void _task_rubicon_tread(void *pvParameters);
 /*----------------------------------------------------------------------*/
 DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration);
 

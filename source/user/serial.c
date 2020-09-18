@@ -1,5 +1,5 @@
 /******************************************************************************
-* File Name          : serial.h
+* File Name          : serial.c
 * Author             : Tatarchenko S.
 * Version            : v 1.0
 * Description        : serial port module for stm32

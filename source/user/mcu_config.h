@@ -8,7 +8,6 @@
 #define MCU_CONFIG_H_
 
 #include "stm32f2xx.h"
-#include "serial.h"
 /*----------------------------------------------------------------------*/
 
 /*
@@ -106,6 +105,7 @@ void flash_data_write(const uint32_t address,int sector, const uint32_t *data,in
 void flash_data_read(const uint32_t address, uint32_t *data,int size);
 
 int mprintf (const char *format,...);
+void cprintf (const char *pointer,int len);
 void DMA2_stream6_reload(uint32_t memory_adress,int new_buf_size);
 
 #endif

@@ -129,7 +129,7 @@ void serial_send_array(const char *array,int size)
 }
 /*
 * name : mprintf
-* description : serial port write without CPU (DMA mode,etc) write array without interrupt
+* description : serial port write for terminal
 */
 int mprintf (const char *format,...)
 {
@@ -145,6 +145,23 @@ int mprintf (const char *format,...)
 	rs485_rts_off;
 	xSemaphoreGive(xMutex_serial_BUSY);
 	return 0; 
+}
+
+/*
+* name : cprintf
+* description : serial port write with fix lenght
+*/
+void cprintf (const char *pointer,int len)
+{
+	xSemaphoreTake(xMutex_serial_BUSY,portMAX_DELAY);
+	rs485_rts_on;
+	for(int i = 0; i < len; i++)
+	{
+		serial_send_byte(serial_pointer,pointer[i]);
+	}
+	while(!(serial_pointer->SR & USART_SR_TC));
+	rs485_rts_off;
+	xSemaphoreGive(xMutex_serial_BUSY);
 }
 
 /* name: flash_data_write

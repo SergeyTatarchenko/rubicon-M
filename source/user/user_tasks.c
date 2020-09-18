@@ -87,7 +87,7 @@ void mode_switcher( char byte )
 void def_data_proc(char byte)
 {
 	static int counter = 0;
-	static char buffer[sizeof(RUBICON_CONTROL_MESSAGE_TypaDef)] = {0};
+	static char buffer[sizeof(RUBICON_CONTROL_MESSAGE_TypeDef)] = {0};
 	/*message header check*/
 	
 }
@@ -148,8 +148,6 @@ void _task_service_serial(void *pvParameters)
 	static int tick = 0;
 	TCmdTypeDef input_command;
 	char buffer[COMMAND_BUF_SIZE] = {0};
-	xMutex_serial_BUSY = xSemaphoreCreateMutex();
-	
 	while(TRUE)
 	{
 		if(tick > tick_overload)
@@ -196,6 +194,32 @@ void _task_service_serial(void *pvParameters)
 	}
 }
 
+/* name: _task_rubicon_tread
+*  descriprion: indication control procedure
+*/
+void _task_rubicon_tread(void *pvParameters)
+{
+	const int tick_overload = 3600;
+	static int tick = 0;
+	char buffer[COMMAND_BUF_SIZE] = {0};
+	static RUBICON_VPU_MESSAGE_TypeDef mes;
+	while(TRUE)
+	{
+		if(tick > tick_overload)
+		{
+			tick = 0;
+		}
+		else
+		{
+			tick++;
+		}
+		if(uxQueueMessagesWaiting( kso_serial_queue ) != 0)
+		{
+			xQueueReceive(kso_serial_queue,&buffer,portMAX_DELAY);
+		}
+	vTaskDelay(SERIAL_UPDATE_RATE);
+	}
+}
 /* name: _task_led
 *  descriprion: indication control procedure
 */
@@ -246,7 +270,6 @@ void _task_state_update(void *pvParameters)
 	
 	/*load configuration data*/
 	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
-	
 	while(TRUE)
 	{
 		if(tick > tick_overload )

@@ -175,10 +175,10 @@ extern xSemaphoreHandle xMutex_serial_BUSY;
 extern DEVICE_MODE mode;
 
 /*----------------------------------------------------------------------*/
+int CheckTamperPin( void );
 void GetHwAdrState( ADDRESS_TypeDef* state );
 void GetHwModeState( MODE_TypeDef *state );
 void GetHwOutState ( OUTPUTS_TypeDef* state);
-int CheckTamperPin( void );
 uint16_t adc_covert_from_mv(uint16_t value);
 uint16_t adc_covert_to_mv(uint16_t value);
 uint8_t Crc8(uint8_t *pcBlock, uint8_t len);

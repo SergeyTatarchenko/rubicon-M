@@ -30,7 +30,6 @@ int main()
 		__enable_irq ();
 		
 		NVIC_EnableIRQ (USART6_IRQn);
-		//NVIC_EnableIRQ(DMA2_Stream6_IRQn);
 		
 		/*RTOS start here*/
 		vTaskStartScheduler();
@@ -50,20 +49,25 @@ int main()
 BaseType_t Init_()
 {
 	BaseType_t TaskCreation;
-	MEM_ALLOCATION.serial_priority = configMAX_PRIORITIES - 2;
-	MEM_ALLOCATION.user_priority =   configMAX_PRIORITIES - 1;
+	MEM_ALLOCATION.serial_priority = configMAX_PRIORITIES - 1;
+	MEM_ALLOCATION.user_priority =   configMAX_PRIORITIES - 2;
 	MEM_ALLOCATION.stack_user = 512;
 	MEM_ALLOCATION.stack_serial = 256;
 	
 	/*queue for service serial port*/
 	service_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,COMMAND_BUF_SIZE);
-	kso_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,sizeof(RUBICON_CONTROL_MESSAGE_TypaDef));
+	/*queue for 777 protocol input commands*/
+	kso_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,sizeof(RUBICON_CONTROL_MESSAGE_TypeDef));
+	/*usart save murex*/
+	xMutex_serial_BUSY = xSemaphoreCreateMutex();
 	
 	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
 									NULL, MEM_ALLOCATION.user_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
 									NULL, MEM_ALLOCATION.user_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",MEM_ALLOCATION.stack_serial,
+									NULL, MEM_ALLOCATION.serial_priority , NULL );
+	TaskCreation &= xTaskCreate(&_task_rubicon_tread ,"777",MEM_ALLOCATION.stack_serial,
 									NULL, MEM_ALLOCATION.serial_priority , NULL );
 	
 	return TaskCreation;
