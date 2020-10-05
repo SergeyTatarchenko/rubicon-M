@@ -25,7 +25,8 @@ typedef enum
 	S_ERROR_ZONE2,
 	S_ALARM_ZONE1,
 	S_ALARM_ZONE2,
-	
+	S_ALARM_ALL,
+	S_ERROR_ALL
 }DEVICE_STATE_TypeDef;
 
 /* union for manual ADDRESS configuration                               */
@@ -70,42 +71,33 @@ typedef union
         unsigned zone_1_error:1;
     }bit;
 }OUTPUTS_TypeDef;
-/* struct for device STATE implemention                                */
-typedef struct
-{
-	union
-	{
-		uint8_t byte;
-		struct
-		{
-			unsigned RS_485_connected:1;
-			unsigned zone_0_alarm:1;
-			unsigned zone_0_error:1;
-			unsigned zone_1_alarm:1;
-			unsigned zone_1_error:1;
-		}bit;
-	}status;
-}STATE_TypeDef;
+
 
 /* struct for device general mode and configuration                     */
 typedef union
 {
-	struct{
-		union{
-			uint16_t byte;
-			struct{
+	struct
+	{
+		union
+		{
+			uint32_t word;
+			struct
+			{
 				unsigned first_startup:1;
-				
 			}bit;
 		}status;
-	uint16_t zone_0_treshold;
-	uint16_t zone_1_treshold;
-	uint16_t zone_0_timeint;
-	uint16_t zone_1_timeint;
-	uint16_t zone_0_triglimit;
-	uint16_t zone_1_triglimit;
+	uint16_t zone_0_treshold;                /*порог срабатывания зоны 1*/
+	uint16_t zone_1_treshold;                /*порог срабатывания зоны 2*/
+	uint16_t zone_0_timeint;                 /*временной интервал зоны 1*/
+	uint16_t zone_1_timeint;                 /*временной интервал зоны 2*/
+	uint16_t zone_0_triglimit;               /*граничное значение 
+                                               превышений порога за 
+                                               временной интервал зоны 1*/
+	uint16_t zone_1_triglimit;               /*граничное значение 
+                                               превышений порога за 
+                                               временной интервал зоны 2*/
 	}data;
-	uint32_t array[8]; /*4*8 data config size */
+	uint32_t array[4];                                /* блок 32 байт   */
 }CONFIG_TypeDef;
 
 /* struct for adc values from zone amplifiers                           */
@@ -150,10 +142,8 @@ typedef enum
 	FAULT
 }DEVICE_MODE;
 /*----------------------------------------------------------------------*/
-#define ZONE_0_F1	ADC_VALUES.sign_0
-#define ZONE_0_F2	ADC_VALUES.sign_1
-#define ZONE_1_F1	ADC_VALUES.sign_2
-#define ZONE_1_F2	ADC_VALUES.sign_3
+#define ZONE_0_F	ADC_VALUES.sign_0
+#define ZONE_1_F	ADC_VALUES.sign_1
 /*----------------------------------------------------------------------*/
 
 extern ADDRESS_TypeDef ADDRESS;

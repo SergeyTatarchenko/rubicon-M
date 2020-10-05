@@ -11,6 +11,9 @@
 /*value from CONFIG struct converted from mV*/
 static uint16_t zone_0_treshold = 0;
 static uint16_t zone_1_treshold = 0;
+/*value from CONFIG struct converted from s*/
+static uint16_t zone_0_timeint = 0;
+static uint16_t zone_1_timeint = 0;
 
 void serial_data_proc( char byte );
 void def_data_proc( char byte );
@@ -86,8 +89,8 @@ void mode_switcher( char byte )
 */
 void def_data_proc(char byte)
 {
-	static int counter = 0;
-	static char buffer[sizeof(RUBICON_CONTROL_MESSAGE_TypeDef)] = {0};
+	//static int counter = 0;
+	//static char buffer[sizeof(RUBICON_CONTROL_MESSAGE_TypeDef)] = {0};
 	/*message header check*/
 	
 }
@@ -202,7 +205,6 @@ void _task_rubicon_tread(void *pvParameters)
 	const int tick_overload = 3600;
 	static int tick = 0;
 	char buffer[COMMAND_BUF_SIZE] = {0};
-	static RUBICON_VPU_MESSAGE_TypeDef mes;
 	while(TRUE)
 	{
 		if(tick > tick_overload)
@@ -211,7 +213,7 @@ void _task_rubicon_tread(void *pvParameters)
 		}
 		else
 		{
-			tick++;
+			tick++; /*up every SERIAL_UPDATE_RATE ms */
 		}
 		if(uxQueueMessagesWaiting( kso_serial_queue ) != 0)
 		{
@@ -231,6 +233,9 @@ void _task_led(void *pvParameters)
 		{
 			case NORMAL:
 				sync_led_on;
+				vTaskDelay(100);
+				sync_led_off;
+				vTaskDelay(900);
 				break;
 			case IDLE:
 				sync_led_off;
@@ -246,15 +251,19 @@ void _task_led(void *pvParameters)
 				break;
 			case ALARM:
 				sync_led_off;
+			vTaskDelay(10);
 				break;
 			case DEBUG:
 				sync_led_on;
+			vTaskDelay(10);
 				break;
 			case FAULT:
 				sync_led_off;
+			vTaskDelay(10);
 				break;
 			default:
 				sync_led_off;
+			vTaskDelay(10);
 				break;
 		}
 	}
@@ -270,6 +279,14 @@ void _task_state_update(void *pvParameters)
 	
 	/*load configuration data*/
 	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
+	/* convert flash treshold value from mV to int*/
+	zone_0_treshold = adc_covert_from_mv(CONFIG.data.zone_0_treshold);
+	zone_1_treshold = adc_covert_from_mv(CONFIG.data.zone_1_treshold);
+	
+	/*convert flash timeint value from S to mS*/
+	zone_0_timeint = CONFIG.data.zone_0_timeint * 1000;
+	zone_1_timeint = CONFIG.data.zone_1_timeint * 1000;
+	
 	while(TRUE)
 	{
 		if(tick > tick_overload )
@@ -280,12 +297,15 @@ void _task_state_update(void *pvParameters)
 		{
 			tick++;
 		}
+		if((mode == NORMAL)||(mode == DEBUG))
+		{
+			rubicon_zone_thread(&CONFIG);
+		}
 		if(tick%STATE_UPDATE_RATE == 0)
 		{
 			/*update all hw states*/
 			GetHwAdrState(&ADDRESS);
 			GetHwModeState(&MODE);
-			GetHwOutState(&OUTPUTS);
 			
 			/*if TAPMER off set mode ALARM, swicth all outputs OFF, all fault LED ON*/
 			if(!CheckTamperPin())
@@ -308,10 +328,6 @@ void _task_state_update(void *pvParameters)
 				led_zone_1_err_off;
 			}
 		}
-		if((mode == NORMAL)||(mode == DEBUG))
-		{
-			rubicon_zone_thread(&CONFIG);
-		}
 		vTaskDelay(1);
 	}
 }
@@ -321,86 +337,76 @@ void _task_state_update(void *pvParameters)
 */
 DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 {
-	static int tick_zone_0 = 0,
-			   tick_zone_1 = 0,
-			   zone_0_trigger_counter = 0,
-			   zone_1_trigger_counter = 0,
-			   zone_0_trigger = 0,
-			   zone_1_trigger = 0;
+	/*counter_down - счетчик от timeint до 0,counter_up - счетчик от 0 до triglimit */
+	static int zone_0_trigger = 0,zone_0_counter_up = 0,zone_0_counter_down = 0;
+	static int zone_1_trigger = 0,zone_1_counter_up = 0,zone_1_counter_down = 0;
 	
 	DEVICE_STATE_TypeDef state = S_NORMAL;
-	/*zone 0 counter down*/
-	if(tick_zone_0 > 0)
-	{
-		tick_zone_0 --;
-	}
-	else
-	{
-		/*trigger counter reset*/
-		zone_0_trigger_counter = 0;
-		zone_0_trigger = 0;
-	}
 	
-	/*zone 1 counter down*/
-	if(tick_zone_1 > 0)
+	/*zone 0*/
+	if(MODE.bit.zone0_enable == 1)
 	{
-		tick_zone_1 --;
-	}
-	else
-	{
-		/*trigger counter reset*/
-		zone_1_trigger_counter = 0;
-		zone_1_trigger = 0;
-	}
-	
-	/*ZONE 0*/
-	if(!MODE.bit.zone0_enable)
-	{
-		switch(MODE.bit.zone0_mode)
+		/*trigger SET*/
+		if((zone_0_trigger == 0)&&(ZONE_0_F > zone_0_treshold))
 		{
-			case TRUE:
-				/*zone 0 treshold exceed*/
-				if(ZONE_0_F1 > zone_0_treshold)
-				{
-					if(zone_0_trigger == 0)
-					{
-						zone_0_trigger = 1;
-					}
-				}
-				break;
-			case FALSE:
-				if(ZONE_0_F2 > zone_0_treshold)
-				{
-					if(zone_0_trigger == 0)
-					{
-						zone_0_trigger = 1;
-					}
-				}
-				break;
+			zone_0_trigger = 1;
+			zone_0_counter_down = zone_0_timeint;
+		}
+		
+		if(zone_0_counter_down > 0)
+		{
+			zone_0_counter_down--;
+		}
+		/*trigger RESET*/
+		else
+		{
+			zone_0_trigger = 0;
+			zone_0_counter_up = 0;
+		}
+		/*if trigger enable*/
+		if((zone_0_trigger == 1)&&(ZONE_0_F > zone_0_treshold))
+		{
+			zone_0_counter_up++;
+		}
+		
+		/*sensor triggering for zone 0!!!*/
+		if((zone_0_counter_up>=configuration->data.zone_0_triglimit )&&(zone_0_counter_down > 0))
+		{
+			state = S_ALARM_ZONE1;
 		}
 	}
-	
-	/*ZONE 1*/
-	if(!MODE.bit.zone1_enable)
+	/*zone 1*/
+	if(MODE.bit.zone1_enable == 1)
 	{
-		switch(MODE.bit.zone0_mode)
+		/*trigger SET*/
+		if((zone_1_trigger == 0)&&(ZONE_1_F > zone_1_treshold))
 		{
-			case TRUE:
-				/*zone 1 treshold exceed*/
-				if(ZONE_1_F1 > zone_1_treshold)
-				{
-					
-				}
-			break;
-		case FALSE:
-				if(ZONE_1_F2 > zone_1_treshold)
-				{
-					
-				}
-			break;
+			zone_1_trigger = 1;
+			zone_1_counter_down = zone_1_timeint;
+		}
+		
+		if(zone_1_counter_down > 0)
+		{
+			zone_1_counter_down--;
+		}
+		/*trigger RESET*/
+		else
+		{
+			zone_1_trigger = 0;
+			zone_1_counter_up = 0;
+		}
+		/*if trigger enable*/
+		if((zone_1_trigger == 1)&&(ZONE_1_F > zone_1_treshold))
+		{
+			zone_1_counter_up++;
+		}
+		
+		/*sensor triggering for zone 0!!!*/
+		if((zone_1_counter_up>=configuration->data.zone_1_triglimit )&&(zone_1_counter_down > 0))
+		{
+			state = S_ALARM_ZONE2;
 		}
 	}
-	
 	return state;
 }
 

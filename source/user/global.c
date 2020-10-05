@@ -76,10 +76,10 @@ uint8_t Crc8(uint8_t *pcBlock, uint8_t len)
 */
 void GetHwAdrState( ADDRESS_TypeDef* state )
 {
-    uint32_t  temp = GPIOC->IDR;
+    uint32_t  temp = ~GPIOC->IDR;
     temp &= 0x0F; /* from PC0 to PC3 bit mask*/
     state->byte = temp;
-    temp = GPIOA->IDR;
+    temp = ~GPIOA->IDR;
     temp &= 0x01; /* bit mask for PA0*/
     state->bit.ADDR_bit5 = temp;
 }
@@ -89,10 +89,10 @@ void GetHwAdrState( ADDRESS_TypeDef* state )
 */
 void GetHwModeState( MODE_TypeDef *state )
 {
-    uint32_t  temp = GPIOB->IDR;
+    uint32_t  temp = ~GPIOB->IDR;
     temp &= 0x03; /* from PB0 to PB1 bit mask*/
     state->byte = temp;
-    temp = GPIOC->IDR;
+    temp = ~GPIOC->IDR;
     temp>>=10;/*move to PC10 - PC11*/
     temp &= 0x03;/*bit mask for PC10 - PC11*/
     temp<<=2;
