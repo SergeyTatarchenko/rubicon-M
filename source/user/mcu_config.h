@@ -80,6 +80,16 @@ sector #3 16KB size, 48KB limit flash memory for user program
 #define sync_led_off		(GPIOC->BSRR |=GPIO_BSRR_BS_9 )
 #define sync_led_on			(GPIOC->BSRR |=GPIO_BSRR_BR_9 )
 
+/*relays*/
+#define relay_z0_err_on		(GPIOB->BSRR |=GPIO_BSRR_BS_4 )
+#define relay_z0_err_off	(GPIOB->BSRR |=GPIO_BSRR_BR_4 )
+#define relay_z0_alrm_on	(GPIOB->BSRR |=GPIO_BSRR_BS_5 )
+#define relay_z0_alrm_off	(GPIOB->BSRR |=GPIO_BSRR_BR_5 )
+#define relay_z1_err_on		(GPIOB->BSRR |=GPIO_BSRR_BS_6 )
+#define relay_z1_err_off	(GPIOB->BSRR |=GPIO_BSRR_BR_6 )
+#define relay_z1_alrm_on	(GPIOB->BSRR |=GPIO_BSRR_BS_7 )
+#define relay_z1_alrm_off	(GPIOB->BSRR |=GPIO_BSRR_BR_7 )
+ 
 /*serial*/
 #define service_rts_on		(GPIOB->BSRR |=GPIO_BSRR_BS_12)
 #define service_rts_off		(GPIOB->BSRR |=GPIO_BSRR_BR_12)
@@ -89,7 +99,7 @@ sector #3 16KB size, 48KB limit flash memory for user program
 #define rs485_rts_off		(GPIOC->BSRR |=GPIO_BSRR_BR_8)
 
 /*adc*/
-#define num_of_adc_conversion 6
+#define num_of_adc_conversion 4
 #define ADC_START	ADC1->CR2 |= ADC_CR2_SWSTART
 #define ADC_STOP	ADC1->CR2 &= ~ADC_CR2_SWSTART
 

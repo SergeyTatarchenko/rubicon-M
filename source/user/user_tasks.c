@@ -12,12 +12,8 @@
 static uint16_t zone_0_treshold = 0;
 static uint16_t zone_1_treshold = 0;
 /*value from CONFIG struct converted from s*/
-static uint16_t zone_0_timeint = 0;
-static uint16_t zone_1_timeint = 0;
-
-void serial_data_proc( char byte );
-void def_data_proc( char byte );
-void mode_switcher( char byte );
+static uint32_t zone_0_timeint = 0;
+static uint32_t zone_1_timeint = 0;
 
 /* name: USART6_IRQHandler
 *  descriprion: interrupt handler for RS 485 port communication
@@ -129,7 +125,7 @@ void serial_data_proc(char byte)
 				mode = PROGRAMMING_SS;
 				break;
 			case PROGRAMMING_SS:
-					/*send data to queue (command extracted in _task_service_serial function)*/
+				/*send data to queue (command extracted in _task_service_serial function)*/
 				xQueueSendFromISR(service_serial_queue,buffer,0);
 				memset(buffer,0,COMMAND_BUF_SIZE);
 				break;
@@ -196,25 +192,66 @@ void _task_service_serial(void *pvParameters)
 		vTaskDelay(SERIAL_UPDATE_RATE);
 	}
 }
+/* name: _task_system_thread
+*  descriprion: system management
+*/
+void _task_system_thread(void *pvParameters)
+{
+	static DEVICE_STATE_TypeDef local_state = S_NORMAL;
+	while(TRUE)
+	{
+		xSemaphoreTake(xSemph_state_UPDATE,portMAX_DELAY);
+		/* тут управление выходами реле */
+		if(local_state != global_state)
+		{
+			local_state = global_state;
+			switch(local_state)
+			{
+				/*сработка зоны 1*/
+				case S_ALARM_ZONE1:
+					led_zone_0_alrm_on;
+				
+				/* тут дописать вызов програмных таймеров на включение реле обратно 
+				после N секунд выдержки сигнала и выдачу триггера в сообщение для КСО,
+				только для вариантов с ALARM. При ERROR реле отключается до смены состояния на NORMAL или ALARM
+				*/
+					break;
+				/*обрыв кабеля зоны 1*/
+				case S_ERROR_ZONE1:
+					break;
+				/*сработка зоны 2*/
+				case S_ALARM_ZONE2:
+					led_zone_1_alrm_on;
+					break;
+				/*обрыв кабеля зоны 2*/
+				case S_ERROR_ZONE2:
+					break;
+				/*сработка обоих зон*/
+				case S_ALARM_ALL:
+					break;
+				/*обрыв кабеля обоих зон*/
+				case S_ERROR_ALL:
+					break;
+				/*дежурный режим*/
+				case S_NORMAL:
+					break;
+				default:
+					break;
+			}
+		}
+	}
+}
 
 /* name: _task_rubicon_tread
 *  descriprion: indication control procedure
 */
-void _task_rubicon_tread(void *pvParameters)
+void _task_rubicon_thread(void *pvParameters)
 {
-	const int tick_overload = 3600;
-	static int tick = 0;
 	char buffer[COMMAND_BUF_SIZE] = {0};
+
 	while(TRUE)
 	{
-		if(tick > tick_overload)
-		{
-			tick = 0;
-		}
-		else
-		{
-			tick++; /*up every SERIAL_UPDATE_RATE ms */
-		}
+		
 		if(uxQueueMessagesWaiting( kso_serial_queue ) != 0)
 		{
 			xQueueReceive(kso_serial_queue,&buffer,portMAX_DELAY);
@@ -299,7 +336,13 @@ void _task_state_update(void *pvParameters)
 		}
 		if((mode == NORMAL)||(mode == DEBUG))
 		{
-			rubicon_zone_thread(&CONFIG);
+			/*В нормальном режиме работы вызов функции каждую ~1мс*/
+			global_state = rubicon_zone_thread(&CONFIG);
+			/* переключение задачи на _task_system_thread */
+			if(global_state != S_NORMAL )
+			{
+				xSemaphoreGive(xSemph_state_UPDATE);
+			}
 		}
 		if(tick%STATE_UPDATE_RATE == 0)
 		{
@@ -341,6 +384,7 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 	static int zone_0_trigger = 0,zone_0_counter_up = 0,zone_0_counter_down = 0;
 	static int zone_1_trigger = 0,zone_1_counter_up = 0,zone_1_counter_down = 0;
 	
+	uint8_t updater = 0;
 	DEVICE_STATE_TypeDef state = S_NORMAL;
 	
 	/*zone 0*/
@@ -352,27 +396,29 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 			zone_0_trigger = 1;
 			zone_0_counter_down = zone_0_timeint;
 		}
-		
-		if(zone_0_counter_down > 0)
+		/* начало дискретизации сигнала в течение заданного интервала после первого превышения порога*/
+		if(zone_0_trigger == 1)
 		{
-			zone_0_counter_down--;
-		}
-		/*trigger RESET*/
-		else
-		{
-			zone_0_trigger = 0;
-			zone_0_counter_up = 0;
-		}
-		/*if trigger enable*/
-		if((zone_0_trigger == 1)&&(ZONE_0_F > zone_0_treshold))
-		{
-			zone_0_counter_up++;
-		}
-		
-		/*sensor triggering for zone 0!!!*/
-		if((zone_0_counter_up>=configuration->data.zone_0_triglimit )&&(zone_0_counter_down > 0))
-		{
-			state = S_ALARM_ZONE1;
+			if(zone_0_counter_down > 0)
+			{
+				zone_0_counter_down--;
+			}
+			/*trigger RESET*/
+			else
+			{
+				zone_0_trigger = 0;
+				zone_0_counter_up = 0;
+			}
+			if(ZONE_0_F > zone_0_treshold)
+			{
+				zone_0_counter_up++;
+			}
+			/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
+			if((zone_0_counter_up>=configuration->data.zone_0_triglimit )&&(zone_0_counter_down > 0))
+			{
+				state = S_ALARM_ZONE1;
+				updater++;
+			}
 		}
 	}
 	/*zone 1*/
@@ -384,28 +430,34 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 			zone_1_trigger = 1;
 			zone_1_counter_down = zone_1_timeint;
 		}
-		
-		if(zone_1_counter_down > 0)
+		/* начало дискретизации сигнала в течение заданного интервала после первого превышения порога*/
+		if(zone_1_trigger == 1)
 		{
-			zone_1_counter_down--;
+			if(zone_1_counter_down > 0)
+			{
+				zone_1_counter_down--;
+			}
+			/*trigger RESET*/
+			else
+			{
+				zone_1_trigger = 0;
+				zone_1_counter_up = 0;
+			}
+			if(ZONE_1_F > zone_1_treshold)
+			{
+				zone_1_counter_up++;
+			}
+			/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
+			if((zone_1_counter_up>=configuration->data.zone_1_triglimit )&&(zone_1_counter_down > 0))
+			{
+				state = S_ALARM_ZONE2;
+				updater++;
+			}
 		}
-		/*trigger RESET*/
-		else
-		{
-			zone_1_trigger = 0;
-			zone_1_counter_up = 0;
-		}
-		/*if trigger enable*/
-		if((zone_1_trigger == 1)&&(ZONE_1_F > zone_1_treshold))
-		{
-			zone_1_counter_up++;
-		}
-		
-		/*sensor triggering for zone 0!!!*/
-		if((zone_1_counter_up>=configuration->data.zone_1_triglimit )&&(zone_1_counter_down > 0))
-		{
-			state = S_ALARM_ZONE2;
-		}
+	}
+	if(updater > 1)
+	{
+		state = S_ALARM_ALL;
 	}
 	return state;
 }

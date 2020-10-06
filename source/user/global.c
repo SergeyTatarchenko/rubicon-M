@@ -18,8 +18,11 @@ ADC_CHANNELS_TypeDef ADC_CHANNELS;
 xQueueHandle service_serial_queue;
 xQueueHandle kso_serial_queue;
 xSemaphoreHandle xMutex_serial_BUSY;
+xSemaphoreHandle xSemph_state_UPDATE;
 
 DEVICE_MODE mode = NORMAL;
+DEVICE_STATE_TypeDef global_state = S_NORMAL;
+
 USART_TypeDef * serial_pointer = USART6;
 /*----------------------------------------------------------------------*/
 static const uint8_t Crc8Table[256] = 
@@ -58,6 +61,26 @@ static const uint8_t Crc8Table[256] =
         0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
 };
 /*----------------------------------------------------------------------*/
+/*
+* name: mode_update
+* description : mode_update
+*/
+void mode_update(DEVICE_MODE new_mode)
+{
+	switch(new_mode)
+	{
+		case IDLE:
+			break;
+		case PROGRAMMING_SS:
+			break;
+		case ALARM:
+			break;
+		default:
+			break;
+	}
+
+}
+
 /* 
 * CRC-8 calculate (Dallas 0x31 poly)
 */

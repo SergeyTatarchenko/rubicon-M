@@ -20,9 +20,14 @@
 void _task_led(void *pvParameters);
 void _task_state_update(void *pvParameters);
 void _task_service_serial(void *pvParameters);
-void _task_rubicon_tread(void *pvParameters);
+void _task_rubicon_thread(void *pvParameters);
+void _task_system_thread(void *pvParameters);
 /*----------------------------------------------------------------------*/
 DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration);
+
+void serial_data_proc( char byte );
+void def_data_proc   ( char byte );
+void mode_switcher   ( char byte );
 
 #define SWITCH_SEQ_LENGHT	4
 #define SWITCH_BYTE			'\r'

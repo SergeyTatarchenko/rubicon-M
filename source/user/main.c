@@ -49,9 +49,12 @@ int main()
 BaseType_t Init_()
 {
 	BaseType_t TaskCreation;
-	MEM_ALLOCATION.serial_priority = configMAX_PRIORITIES - 1;
-	MEM_ALLOCATION.user_priority =   configMAX_PRIORITIES - 2;
-	MEM_ALLOCATION.stack_user = 512;
+	MEM_ALLOCATION.system_priority = configMAX_PRIORITIES - 1;
+	MEM_ALLOCATION.serial_priority = configMAX_PRIORITIES - 2;
+	MEM_ALLOCATION.user_priority =   configMAX_PRIORITIES - 3;
+	
+	MEM_ALLOCATION.stack_system = 128;
+	MEM_ALLOCATION.stack_user   = 512;
 	MEM_ALLOCATION.stack_serial = 256;
 	
 	/*queue for service serial port*/
@@ -60,6 +63,8 @@ BaseType_t Init_()
 	kso_serial_queue = xQueueCreate(SERVICE_COMMBUFF_SIZE,sizeof(RUBICON_CONTROL_MESSAGE_TypeDef));
 	/*usart save murex*/
 	xMutex_serial_BUSY = xSemaphoreCreateMutex();
+	/**/
+	xSemph_state_UPDATE = xSemaphoreCreateCounting( 5, 0 );
 	
 	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
 									NULL, MEM_ALLOCATION.user_priority , NULL );
@@ -67,9 +72,10 @@ BaseType_t Init_()
 									NULL, MEM_ALLOCATION.user_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",MEM_ALLOCATION.stack_serial,
 									NULL, MEM_ALLOCATION.serial_priority , NULL );
-	TaskCreation &= xTaskCreate(&_task_rubicon_tread ,"777",MEM_ALLOCATION.stack_serial,
+	TaskCreation &= xTaskCreate(&_task_rubicon_thread ,"777",MEM_ALLOCATION.stack_serial,
 									NULL, MEM_ALLOCATION.serial_priority , NULL );
-	
+	TaskCreation &= xTaskCreate(&_task_system_thread ,"system",MEM_ALLOCATION.stack_system,
+									NULL, MEM_ALLOCATION.system_priority , NULL );
 	return TaskCreation;
 }
 

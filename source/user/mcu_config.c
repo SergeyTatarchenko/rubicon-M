@@ -80,7 +80,7 @@ void peripheral_config()
 	ADC1->SQR1 &= ~ADC_SQR1_L;
 	ADC1->SQR1 |= (num_of_adc_conversion - 1)<<20;
 	/*channel poll sequence*/
-	ADC1->SQR3 |= ((1<<0)|(2<<5)|(4<<10)|(5<<15)|(6<<20)|(7<<25));
+	ADC1->SQR3 |= ((1<<0)|(2<<5)|(4<<10)|(5<<15));
 	/*ADC1 on*/
 	ADC1->CR2 |= ADC_CR2_ADON;
 	/***********************************************************************/

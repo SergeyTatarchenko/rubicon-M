@@ -36,7 +36,7 @@ static const char user_arguments[NUM_OF_ARGUMENTS][COMMAND_BUF_SIZE] =
 };
 
 /*help textblock for print with terminal*/
-static const char help_text[16][__STRLEN]=
+static const char help_text[17][__STRLEN]=
 {
 	{__HELP_BLOCK_0},
 	{__HELP_BLOCK_1},
@@ -53,7 +53,9 @@ static const char help_text[16][__STRLEN]=
 	{__HELP_BLOCK_12},
 	{__HELP_BLOCK_13},
 	{__HELP_BLOCK_14},
-	{__HELP_BLOCK_15}
+	{__HELP_BLOCK_15},
+	{__HELP_BLOCK_16}
+	
 };
 /*welcome textblock for print with terminal*/
 static const char welcome_text[8][__STRLEN] = 
@@ -212,7 +214,7 @@ void serial_command_executor (TCmdTypeDef command)
 		/*print help textblock*/
 		case C_HELP:
 			mprintf(__POSLINE);
-			terminal_print_txtblock(help_text,16);
+			terminal_print_txtblock(help_text,17);
 			mprintf(__POSLINE);
 			break;
 		/*save current config to flash
@@ -458,47 +460,21 @@ void serial_debug_output( void )
 	itoa(ADC_VALUES.alrm_1,ADC_CHANNELS.ch_2,4);
 	itoa(ADC_VALUES.sign_0,ADC_CHANNELS.ch_4,4);
 	itoa(ADC_VALUES.sign_1,ADC_CHANNELS.ch_5,4);
-	itoa(ADC_VALUES.sign_2,ADC_CHANNELS.ch_6,4);
-	itoa(ADC_VALUES.sign_3,ADC_CHANNELS.ch_7,4);
 	for(int i = 0;i < 4; i++)
 	{
 		ADC_CHANNELS.ch_1[i]+=0x30;
 		ADC_CHANNELS.ch_2[i]+=0x30;
 		ADC_CHANNELS.ch_4[i]+=0x30;
 		ADC_CHANNELS.ch_5[i]+=0x30;
-		ADC_CHANNELS.ch_6[i]+=0x30;
-		ADC_CHANNELS.ch_7[i]+=0x30;
 	}
 	mprintf(" adc ch 1 : ");
-	for(int i = 0; i < 4; i++)
-	{
-		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_1[i]);
-	}
+	cprintf(ADC_CHANNELS.ch_1,4);
 	mprintf(" adc ch 2 : ");
-	for(int i = 0; i < 4; i++)
-	{
-		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_2[i]);
-	}
+	cprintf(ADC_CHANNELS.ch_2,4);
 	mprintf(" adc ch 4 : ");
-	for(int i = 0; i < 4; i++)
-	{
-		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_4[i]);
-	}
+	cprintf(ADC_CHANNELS.ch_4,4);
 	mprintf(" adc ch 5 : ");
-	for(int i = 0; i < 4; i++)
-	{
-		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_5[i]);
-	}
-	mprintf(" adc ch 6 : ");
-	for(int i = 0; i < 4; i++)
-	{
-		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_6[i]);
-	}
-	mprintf(" adc ch 7 : ");
-	for(int i = 0; i < 4; i++)
-	{
-		serial_send_byte(serial_pointer,ADC_CHANNELS.ch_7[i]);
-	}
+	cprintf(ADC_CHANNELS.ch_5,4);
 	mprintf("\r");
 	
 }
@@ -579,7 +555,7 @@ void serial_print_config()
 	/********************************************/
 	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_0_timeint,array,array_size);
-	mprintf("Временное окно зоны 1, мс : ");
+	mprintf("Временное окно зоны 1, с : ");
 	for(int i = 0; i < array_size; i++)
 	{
 		array[i]+=0x30;
@@ -589,7 +565,7 @@ void serial_print_config()
 	/********************************************/
 	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_1_timeint,array,array_size);
-	mprintf("Временное окно зоны 2, мс : ");
+	mprintf("Временное окно зоны 2, с : ");
 	for(int i = 0; i < array_size; i++)
 	{
 		array[i]+=0x30;
@@ -651,7 +627,7 @@ void serial_print_mode()
 	mprintf("Текущее состояние системы:\r\n");
 	mprintf(" Контроль зоны 1 : ");
 	
-	if(MODE.bit.zone0_enable == 0)
+	if(MODE.bit.zone0_enable == 1)
 	{
 		mprintf("Активен");
 	}
@@ -662,7 +638,7 @@ void serial_print_mode()
 	mprintf(__NEWLINE);
 	
 	mprintf(" Режим работы зоны 1 : ");
-	if(MODE.bit.zone0_mode == 1)
+	if(MODE.bit.zone0_mode == 0)
 	{
 		mprintf("Легкий тип ограждения");
 	}
@@ -673,7 +649,7 @@ void serial_print_mode()
 	mprintf(__NEWLINE);
 	mprintf(" Контроль зоны 2 : ");
 	
-	if(MODE.bit.zone1_enable == 0)
+	if(MODE.bit.zone1_enable == 1)
 	{
 		mprintf("Активен");
 	}
@@ -684,7 +660,7 @@ void serial_print_mode()
 	mprintf(__NEWLINE);
 	
 	mprintf(" Режим работы зоны 2 : ");
-	if(MODE.bit.zone1_mode == 1)
+	if(MODE.bit.zone1_mode == 0)
 	{
 		mprintf("Легкий тип ограждения");
 	}

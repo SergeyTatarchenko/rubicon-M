@@ -119,14 +119,14 @@ typedef struct {
 	char ch_2[4];
 	char ch_4[4];
 	char ch_5[4];
-	char ch_6[4];
-	char ch_7[4];
 	
 }ADC_CHANNELS_TypeDef;
 
 typedef struct{
-	uint8_t user_priority;		/*system layer tasks                    */
+	uint8_t system_priority;	/*system layer tasks                    */
+	uint8_t user_priority;		/*user layer tasks                      */
 	uint8_t serial_priority;	/*transmit data tasks                   */
+	uint_least16_t stack_system;/*stack size for system tasks           */
 	uint_least16_t stack_serial;/*stack size for data transmit/receive  */
 	uint_least16_t stack_user;	/*stack for user layer tasks and threads*/
 }MEM_ALLOCATION_TypeDef;
@@ -162,8 +162,12 @@ extern xQueueHandle service_serial_queue;
 extern xQueueHandle kso_serial_queue;
 /*mutex for save serial transmit function*/
 extern xSemaphoreHandle xMutex_serial_BUSY;
-extern DEVICE_MODE mode;
+/*semaphore for updating the status of relay outputs and indication*/
+extern xSemaphoreHandle xSemph_state_UPDATE;
 
+/*----------------------------------------------------------------------*/
+extern DEVICE_MODE mode;
+extern DEVICE_STATE_TypeDef global_state;
 /*----------------------------------------------------------------------*/
 int CheckTamperPin( void );
 void GetHwAdrState( ADDRESS_TypeDef* state );
@@ -172,5 +176,6 @@ void GetHwOutState ( OUTPUTS_TypeDef* state);
 uint16_t adc_covert_from_mv(uint16_t value);
 uint16_t adc_covert_to_mv(uint16_t value);
 uint8_t Crc8(uint8_t *pcBlock, uint8_t len);
+void mode_update(DEVICE_MODE new_mode);
 #endif
 /****************************end of file ********************************/
