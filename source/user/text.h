@@ -15,7 +15,7 @@
 
 
 #define __HEADER_MESSAGE	"Нажмите Enter для входа в режим конфигурации...\r\n"
-#define __ERROR_MESSAGE		"Неверная команда, попробуйте еще раз"
+#define __ERROR_MESSAGE		"Неверная команда, введите help для справки"
 #define __OUT_MESSAGE		"Выход из режима конфигурации...\r\n"
 
 #define __HELP_BLOCK_0		"Используемые команды : \r\n"

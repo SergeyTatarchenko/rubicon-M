@@ -15,6 +15,12 @@ static uint16_t zone_1_treshold = 0;
 static uint32_t zone_0_timeint = 0;
 static uint32_t zone_1_timeint = 0;
 
+const unsigned portBASE_TYPE zone_0_timerID = 1;
+const unsigned portBASE_TYPE zone_1_timerID = 2;
+
+TimerHandle_t zone_0_timer;
+TimerHandle_t zone_1_timer;
+
 /* name: USART6_IRQHandler
 *  descriprion: interrupt handler for RS 485 port communication
 */
@@ -209,37 +215,81 @@ void _task_system_thread(void *pvParameters)
 			{
 				/*сработка зоны 1*/
 				case S_ALARM_ZONE1:
+					/*вкл. индикацию на светодиод, откл реле на 2с*/
 					led_zone_0_alrm_on;
-				
-				/* тут дописать вызов програмных таймеров на включение реле обратно 
-				после N секунд выдержки сигнала и выдачу триггера в сообщение для КСО,
-				только для вариантов с ALARM. При ERROR реле отключается до смены состояния на NORMAL или ALARM
-				*/
+					relay_z0_alrm_off;
+					/*добавить занесение триггера в ответное сообщение для КСО*/
+					/*старт таймера возврата реле*/
+					xTimerStart(zone_0_timer, 0);
 					break;
 				/*обрыв кабеля зоны 1*/
 				case S_ERROR_ZONE1:
+					/*вкл. индикацию на светодиод, откл реле ошибки до восстановления */
+					led_zone_0_err_on;
+					relay_z0_err_off;
+					/*добавить занесение триггера в ответное сообщение для КСО*/
 					break;
 				/*сработка зоны 2*/
 				case S_ALARM_ZONE2:
+					/*вкл. индикацию на светодиод, откл реле на 2с*/
 					led_zone_1_alrm_on;
+					relay_z1_alrm_off;
+					/*добавить занесение триггера в ответное сообщение для КСО*/
+					/*старт таймера возврата реле*/
+					xTimerStart(zone_1_timer, 0);
 					break;
 				/*обрыв кабеля зоны 2*/
 				case S_ERROR_ZONE2:
+					/*вкл. индикацию на светодиод, откл реле ошибки до восстановления */
+					led_zone_1_err_on;
+					relay_z1_err_off;
+					/*добавить занесение триггера в ответное сообщение для КСО*/
 					break;
 				/*сработка обоих зон*/
 				case S_ALARM_ALL:
+					led_zone_0_alrm_on;
+					relay_z0_alrm_off;
+					led_zone_1_alrm_on;
+					relay_z1_alrm_off;
+					
+					xTimerStart(zone_0_timer, 0);
+					xTimerStart(zone_1_timer, 0);
 					break;
 				/*обрыв кабеля обоих зон*/
 				case S_ERROR_ALL:
+					led_zone_0_err_on;
+					relay_z0_err_off;
+					led_zone_1_err_on;
+					relay_z1_err_off;
 					break;
 				/*дежурный режим*/
 				case S_NORMAL:
+					if (mode != ALARM)
+					{
+						
+					}
 					break;
 				default:
 					break;
 			}
 		}
 	}
+}
+
+/* name: zone_0_timer_handler
+*  descriprion: handler for zone 0 relay timer
+*/
+void zone_0_timer_handler (TimerHandle_t xTimer)
+{
+	led_zone_0_alrm_off;
+}
+
+/* name: zone_1_timer_handler
+*  descriprion: handler for zone 1 relay timer
+*/
+void zone_1_timer_handler (TimerHandle_t xTimer)
+{
+	led_zone_1_alrm_off;
 }
 
 /* name: _task_rubicon_tread
@@ -313,7 +363,7 @@ void _task_state_update(void *pvParameters)
 {
 	static int tick = 0;
 	static const int tick_overload = 99999;
-	
+	static DEVICE_STATE_TypeDef local_state = S_NORMAL;
 	/*load configuration data*/
 	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
 	/* convert flash treshold value from mV to int*/
@@ -337,10 +387,11 @@ void _task_state_update(void *pvParameters)
 		if((mode == NORMAL)||(mode == DEBUG))
 		{
 			/*В нормальном режиме работы вызов функции каждую ~1мс*/
-			global_state = rubicon_zone_thread(&CONFIG);
+			local_state = rubicon_zone_thread(&CONFIG);
 			/* переключение задачи на _task_system_thread */
-			if(global_state != S_NORMAL )
+			if(local_state != global_state )
 			{
+				global_state = local_state;
 				xSemaphoreGive(xSemph_state_UPDATE);
 			}
 		}

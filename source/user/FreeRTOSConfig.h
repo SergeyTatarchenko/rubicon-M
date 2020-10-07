@@ -57,7 +57,7 @@
 
 /*timers*/
 #define configUSE_TIMERS            1
-#define configTIMER_TASK_PRIORITY (configMAX_PRIORITIES - 2)
+#define configTIMER_TASK_PRIORITY (configMAX_PRIORITIES - 1)
 #define configTIMER_QUEUE_LENGTH 10
 #define configTIMER_TASK_STACK_DEPTH	64
 //#define configSUPPORT_STATIC_ALLOCATION 1

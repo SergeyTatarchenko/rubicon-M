@@ -29,6 +29,16 @@ void serial_data_proc( char byte );
 void def_data_proc   ( char byte );
 void mode_switcher   ( char byte );
 
+void zone_0_timer_handler (TimerHandle_t xTimer);
+void zone_1_timer_handler (TimerHandle_t xTimer);
+
+extern const unsigned portBASE_TYPE zone_0_timerID;
+extern const unsigned portBASE_TYPE zone_1_timerID;
+
+extern TimerHandle_t zone_0_timer;
+extern TimerHandle_t zone_1_timer;
+
+
 #define SWITCH_SEQ_LENGHT	4
 #define SWITCH_BYTE			'\r'
 
