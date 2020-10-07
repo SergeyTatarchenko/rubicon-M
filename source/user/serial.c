@@ -36,7 +36,7 @@ static const char user_arguments[NUM_OF_ARGUMENTS][COMMAND_BUF_SIZE] =
 };
 
 /*help textblock for print with terminal*/
-static const char help_text[17][__STRLEN]=
+static const char help_text[20][__STRLEN]=
 {
 	{__HELP_BLOCK_0},
 	{__HELP_BLOCK_1},
@@ -54,7 +54,10 @@ static const char help_text[17][__STRLEN]=
 	{__HELP_BLOCK_13},
 	{__HELP_BLOCK_14},
 	{__HELP_BLOCK_15},
-	{__HELP_BLOCK_16}
+	{__HELP_BLOCK_16},
+	{__HELP_BLOCK_17},
+	{__HELP_BLOCK_18},
+	{__HELP_BLOCK_19}
 	
 };
 /*welcome textblock for print with terminal*/
@@ -214,7 +217,7 @@ void serial_command_executor (TCmdTypeDef command)
 		/*print help textblock*/
 		case C_HELP:
 			mprintf(__POSLINE);
-			terminal_print_txtblock(help_text,17);
+			terminal_print_txtblock(help_text,20);
 			mprintf(__POSLINE);
 			break;
 		/*save current config to flash

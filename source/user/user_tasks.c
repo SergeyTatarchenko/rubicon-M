@@ -8,13 +8,14 @@
 /*----------------------------------------------------------------------*/
 #include "user_tasks.h"
 /*----------------------------------------------------------------------*/
+
 /*value from CONFIG struct converted from mV*/
 static uint16_t zone_0_treshold = 0;
 static uint16_t zone_1_treshold = 0;
 /*value from CONFIG struct converted from s*/
 static uint32_t zone_0_timeint = 0;
 static uint32_t zone_1_timeint = 0;
-
+/*software timers instance and id*/
 const unsigned portBASE_TYPE zone_0_timerID = 1;
 const unsigned portBASE_TYPE zone_1_timerID = 2;
 
@@ -70,10 +71,9 @@ void mode_switcher( char byte )
 	if(byte == SWITCH_BYTE)
 	{
 		if((switch_mode_cnt == SWITCH_SEQ_LENGHT) &&
-			(mode!= IDLE)&&(mode != PROGRAMMING_SS)&&
-			(mode != DEBUG) )
+			((mode== NORMAL)||(mode == ALARM)))
 		{
-			mode = IDLE;
+			mode_update(IDLE);
 			switch_mode_cnt = 0;
 		}
 		else
@@ -125,10 +125,10 @@ void serial_data_proc(char byte)
 		switch(mode)
 		{
 			case IDLE:
-				mode = PROGRAMMING_SS;
+				mode_update(PROGRAMMING_SS);
 				break;
 			case DEBUG:
-				mode = PROGRAMMING_SS;
+				mode_update(PROGRAMMING_SS);
 				break;
 			case PROGRAMMING_SS:
 				/*send data to queue (command extracted in _task_service_serial function)*/
@@ -257,9 +257,7 @@ void _task_system_thread(void *pvParameters)
 					break;
 				/*обрыв кабеля обоих зон*/
 				case S_ERROR_ALL:
-					led_zone_0_err_on;
 					relay_z0_err_off;
-					led_zone_1_err_on;
 					relay_z1_err_off;
 					break;
 				/*дежурный режим*/
@@ -406,7 +404,7 @@ void _task_state_update(void *pvParameters)
 			{
 				if((mode != PROGRAMMING_SS)&&(mode != DEBUG)&&(mode != IDLE))
 				{
-					mode = ALARM;
+					mode_update(ALARM);
 				}
 				
 				led_zone_0_err_on;
@@ -416,7 +414,7 @@ void _task_state_update(void *pvParameters)
 			{
 				if((mode != PROGRAMMING_SS)&&(mode != DEBUG)&&(mode != IDLE))
 				{
-					mode = NORMAL;
+					mode_update(NORMAL);
 				}
 				led_zone_0_err_off;
 				led_zone_1_err_off;
@@ -467,6 +465,8 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 			/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
 			if((zone_0_counter_up>=configuration->data.zone_0_triglimit )&&(zone_0_counter_down > 0))
 			{
+				zone_0_counter_down = 0;
+				zone_0_counter_up = 0;
 				state = S_ALARM_ZONE1;
 				updater++;
 			}
@@ -501,6 +501,8 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 			/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
 			if((zone_1_counter_up>=configuration->data.zone_1_triglimit )&&(zone_1_counter_down > 0))
 			{
+				zone_1_counter_down = 0;
+				zone_1_counter_up = 0;
 				state = S_ALARM_ZONE2;
 				updater++;
 			}

@@ -15,7 +15,7 @@
 #define TRUE 1
 #define FALSE 0
 
-#define VERSION	"0.1"
+#define VERSION	"1.0"
 /*----------------------------------------------------------------------*/
 /* enum for ADC channels check function                                 */
 typedef enum
@@ -107,8 +107,6 @@ typedef struct{
 	uint16_t alrm_1; /*ch 2*/
 	uint16_t sign_0; /*ch 4*/
 	uint16_t sign_1; /*ch 5*/
-	uint16_t sign_2; /*ch 6*/
-	uint16_t sign_3; /*ch 7*/
 	
 }ADC_VALUES_TypeDef;
 

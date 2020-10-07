@@ -67,18 +67,7 @@ static const uint8_t Crc8Table[256] =
 */
 void mode_update(DEVICE_MODE new_mode)
 {
-	switch(new_mode)
-	{
-		case IDLE:
-			break;
-		case PROGRAMMING_SS:
-			break;
-		case ALARM:
-			break;
-		default:
-			break;
-	}
-
+	mode = new_mode;
 }
 
 /* 

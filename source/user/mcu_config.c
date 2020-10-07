@@ -19,7 +19,12 @@ void sys_init()
 	led_zone_1_alrm_off;
 	led_zone_1_err_off;
 	sync_led_off;
-
+	
+	relay_z0_err_off;
+	relay_z0_alrm_off;
+	relay_z1_err_off;
+	relay_z1_alrm_off;
+	
 	peripheral_config();
 	ADC_START;
 }
