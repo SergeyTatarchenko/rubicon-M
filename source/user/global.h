@@ -16,6 +16,7 @@
 #define FALSE 0
 
 #define VERSION	"1.0"
+
 /*----------------------------------------------------------------------*/
 /* enum for ADC channels check function                                 */
 typedef enum

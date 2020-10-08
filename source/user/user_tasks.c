@@ -439,6 +439,7 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 	/*zone 0*/
 	if(MODE.bit.zone0_enable == 1)
 	{
+		/*добавить проверку кабеля на обрыв, опрос сигнала кабеля только при отсутствии обрыва */
 		/*trigger SET*/
 		if((zone_0_trigger == 0)&&(ZONE_0_F > zone_0_treshold))
 		{
@@ -475,6 +476,7 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
 	/*zone 1*/
 	if(MODE.bit.zone1_enable == 1)
 	{
+		/*добавить проверку кабеля на обрыв, опрос сигнала кабеля только при отсутствии обрыва */
 		/*trigger SET*/
 		if((zone_1_trigger == 0)&&(ZONE_1_F > zone_1_treshold))
 		{

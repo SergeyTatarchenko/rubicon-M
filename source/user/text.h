@@ -7,13 +7,17 @@
 #ifndef TEXT_H_
 #define	TEXT_H_
 
+
+//#define LOCALE_EN	TRUE
+#define LOCALE_RU	TRUE
+
 #define __WHITESPACE 0x20
 #define __STRLEN	256
 
 #define __POSLINE			"***************************************************\n\r" 
 #define __NEWLINE			"\r\n"
 
-
+#ifdef LOCALE_RU
 #define __HEADER_MESSAGE	"Нажмите Enter для входа в режим конфигурации...\r\n"
 #define __ERROR_MESSAGE		"Неверная команда, введите help для справки"
 #define __OUT_MESSAGE		"Выход из режима конфигурации...\r\n"
@@ -47,7 +51,7 @@
 #define __WELCOME_BLOCK_5 	"Для справки введите help и нажмите Enter\n\r"
 #define __WELCOME_BLOCK_6 	"Для выхода введите exit и нажмите Enter\n\r"
 #define __WELCOME_BLOCK_7 	__POSLINE
-
+#endif
 
 
 
