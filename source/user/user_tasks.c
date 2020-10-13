@@ -86,6 +86,7 @@ void mode_switcher( char byte )
 		switch_mode_cnt = 0;
 	}
 }
+
 /* name: def_data_proc
 *  descriprion: data proc in NORMAL and ALARM mode
 */
@@ -198,20 +199,22 @@ void _task_service_serial(void *pvParameters)
 		vTaskDelay(SERIAL_UPDATE_RATE);
 	}
 }
+
 /* name: _task_system_thread
 *  descriprion: system management
 */
 void _task_system_thread(void *pvParameters)
 {
-	static DEVICE_STATE_TypeDef local_state = S_NORMAL;
+	static DEVICE_MODE local_mode = NORMAL;
+	
 	while(TRUE)
 	{
 		xSemaphoreTake(xSemph_state_UPDATE,portMAX_DELAY);
+		
 		/* тут управление выходами реле */
-		if(local_state != global_state)
+		if(mode != ALARM)
 		{
-			local_state = global_state;
-			switch(local_state)
+			switch(global_state)
 			{
 				/*сработка зоны 1*/
 				case S_ALARM_ZONE1:
@@ -262,14 +265,32 @@ void _task_system_thread(void *pvParameters)
 					break;
 				/*дежурный режим*/
 				case S_NORMAL:
-					if (mode != ALARM)
+					/*возврат реле ошибки*/
+					relay_z0_err_on;
+					relay_z1_err_on;
+					/*возврат в дежурный режим выходов реле сработки */
+					if(local_mode == ALARM)
 					{
+						local_mode = NORMAL;
+						led_zone_0_alrm_off;
+						led_zone_1_alrm_off;
 						
+						relay_z0_alrm_on;
+						relay_z1_alrm_on;
 					}
 					break;
 				default:
 					break;
 			}
+		}
+		else
+		{
+			/* Сработка тампера, откл. всех реле, ожидание семафора на смену состояния */
+			local_mode = ALARM;
+			relay_z0_err_off;
+			relay_z1_err_off;
+			relay_z0_alrm_off;
+			relay_z1_alrm_off;
 		}
 	}
 }
@@ -279,7 +300,11 @@ void _task_system_thread(void *pvParameters)
 */
 void zone_0_timer_handler (TimerHandle_t xTimer)
 {
-	led_zone_0_alrm_off;
+	if(mode != ALARM)
+	{
+		led_zone_0_alrm_off;
+		relay_z0_alrm_on;
+	}
 }
 
 /* name: zone_1_timer_handler
@@ -287,7 +312,11 @@ void zone_0_timer_handler (TimerHandle_t xTimer)
 */
 void zone_1_timer_handler (TimerHandle_t xTimer)
 {
-	led_zone_1_alrm_off;
+	if(mode != ALARM)
+	{
+		led_zone_1_alrm_off;
+		relay_z1_alrm_on;
+	}
 }
 
 /* name: _task_rubicon_tread
@@ -361,9 +390,13 @@ void _task_state_update(void *pvParameters)
 {
 	static int tick = 0;
 	static const int tick_overload = 99999;
+	
 	static DEVICE_STATE_TypeDef local_state = S_NORMAL;
+	static DEVICE_MODE local_mode = NORMAL;
+	
 	/*load configuration data*/
 	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
+	
 	/* convert flash treshold value from mV to int*/
 	zone_0_treshold = adc_covert_from_mv(CONFIG.data.zone_0_treshold);
 	zone_1_treshold = adc_covert_from_mv(CONFIG.data.zone_1_treshold);
@@ -371,6 +404,11 @@ void _task_state_update(void *pvParameters)
 	/*convert flash timeint value from S to mS*/
 	zone_0_timeint = CONFIG.data.zone_0_timeint * 1000;
 	zone_1_timeint = CONFIG.data.zone_1_timeint * 1000;
+	
+	relay_z0_err_on;
+	relay_z1_err_on;
+	relay_z0_alrm_on;
+	relay_z1_alrm_on;
 	
 	while(TRUE)
 	{
@@ -382,11 +420,12 @@ void _task_state_update(void *pvParameters)
 		{
 			tick++;
 		}
-		if((mode == NORMAL)||(mode == DEBUG))
+		if((mode == NORMAL)||(mode == DEBUG)||(mode == PROGRAMMING_SS))
 		{
 			/*В нормальном режиме работы вызов функции каждую ~1мс*/
 			local_state = rubicon_zone_thread(&CONFIG);
-			/* переключение задачи на _task_system_thread */
+			
+			/* переключение задачи на _task_system_thread при смене состояния */
 			if(local_state != global_state )
 			{
 				global_state = local_state;
@@ -409,12 +448,27 @@ void _task_state_update(void *pvParameters)
 				
 				led_zone_0_err_on;
 				led_zone_1_err_on;
+				
+				led_zone_0_alrm_off;
+				led_zone_1_alrm_off;
+				
+				local_mode = ALARM;
+				/* переключение задачи на _task_system_thread при отрыве тампера */
+				xSemaphoreGive(xSemph_state_UPDATE);
 			}
 			else
 			{
 				if((mode != PROGRAMMING_SS)&&(mode != DEBUG)&&(mode != IDLE))
 				{
 					mode_update(NORMAL);
+				}
+				if(local_mode == ALARM)
+				{
+					local_mode = NORMAL;
+					global_state = S_NORMAL;
+					
+					/* переключение задачи на _task_system_thread при возврате тампера */
+					xSemaphoreGive(xSemph_state_UPDATE);
 				}
 				led_zone_0_err_off;
 				led_zone_1_err_off;
