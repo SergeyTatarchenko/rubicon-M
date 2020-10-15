@@ -79,14 +79,7 @@ typedef union
 {
 	struct
 	{
-		union
-		{
-			uint32_t word;
-			struct
-			{
-				unsigned first_startup:1;
-			}bit;
-		}status;
+	uint32_t serial_baudrate;                /*скорость RS-485          */
 	uint16_t zone_0_treshold;                /*порог срабатывания зоны 1*/
 	uint16_t zone_1_treshold;                /*порог срабатывания зоны 2*/
 	uint16_t zone_0_timeint;                 /*временной интервал зоны 1*/
@@ -98,7 +91,7 @@ typedef union
                                                превышений порога за 
                                                временной интервал зоны 2*/
 	}data;
-	uint32_t array[4];                                /* блок 32 байт   */
+	uint32_t array[4];                                /* блок 16 байт   */
 }CONFIG_TypeDef;
 
 /* struct for adc values from zone amplifiers                           */

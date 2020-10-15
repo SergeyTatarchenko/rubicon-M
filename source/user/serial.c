@@ -36,7 +36,7 @@ static const char user_arguments[NUM_OF_ARGUMENTS][COMMAND_BUF_SIZE] =
 };
 
 /*help textblock for print with terminal*/
-static const char help_text[20][__STRLEN]=
+static const char help_text[21][__STRLEN]=
 {
 	{__HELP_BLOCK_0},
 	{__HELP_BLOCK_1},
@@ -57,7 +57,8 @@ static const char help_text[20][__STRLEN]=
 	{__HELP_BLOCK_16},
 	{__HELP_BLOCK_17},
 	{__HELP_BLOCK_18},
-	{__HELP_BLOCK_19}
+	{__HELP_BLOCK_19},
+	{__HELP_BLOCK_20},
 	
 };
 /*welcome textblock for print with terminal*/
@@ -316,6 +317,18 @@ void serial_command_executor (TCmdTypeDef command)
 					if(command.value != 0)
 					{
 						CONFIG.data.zone_1_triglimit = command.value;
+						mprintf("ok\r\n");
+					}
+					else
+					{
+						mprintf(__ERROR_MESSAGE);
+						mprintf(__NEWLINE);
+					}
+				case A_BAUDRATE:
+					if(command.value != 0)
+					{
+						CONFIG.data.serial_baudrate = command.value;
+						/*добавить функцию обновления скорости порта*/
 						mprintf("ok\r\n");
 					}
 					else

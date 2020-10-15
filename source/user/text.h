@@ -36,12 +36,13 @@
 #define __HELP_BLOCK_11		"address    - текущий адрес устройства для КСО; \r\n"
 #define __HELP_BLOCK_12		"state      - текущее состояние устройства; \r\n"
 #define __HELP_BLOCK_13		"config     - текущая конфигурация устройства; \r\n"
-#define __HELP_BLOCK_14		"treshold1  - порог срабатывания зоны 1, мВ; \r\n"
-#define __HELP_BLOCK_15		"treshold2  - порог срабатывания зоны 2, мВ; \r\n"
-#define __HELP_BLOCK_16		"timeint1   - временной интервал срабатывания зоны 1, с;\r\n"
-#define __HELP_BLOCK_17		"timeint2   - временной интервал срабатывания зоны 2, c;\r\n"
-#define __HELP_BLOCK_18		"triglimit1 - граничное значение превышений порога за временной интервал зоны 1;\r\n"
-#define __HELP_BLOCK_19		"triglimit2 - граничное значение превышений порога за временной интервал зоны 2;\r\n"
+#define __HELP_BLOCK_14		"baudrate   - текущая скорость RS-485; \r\n"
+#define __HELP_BLOCK_15		"treshold1  - порог срабатывания зоны 1, мВ; \r\n"
+#define __HELP_BLOCK_16		"treshold2  - порог срабатывания зоны 2, мВ; \r\n"
+#define __HELP_BLOCK_17		"timeint1   - временной интервал срабатывания зоны 1, с;\r\n"
+#define __HELP_BLOCK_18		"timeint2   - временной интервал срабатывания зоны 2, c;\r\n"
+#define __HELP_BLOCK_19		"triglimit1 - граничное значение превышений порога за временной интервал зоны 1;\r\n"
+#define __HELP_BLOCK_20		"triglimit2 - граничное значение превышений порога за временной интервал зоны 2;\r\n"
 
 #define __WELCOME_BLOCK_0 	__POSLINE
 #define __WELCOME_BLOCK_1 	"Система контроля периметра : <РУБИКОН>\n\r"
@@ -69,6 +70,7 @@
 #define __ADDRESS		'a','d','d','r','e','s','s'
 #define __STATE			's','t','a','t','e'
 #define __CONFIG		'c','o','n','f','i','g'
+#define __BAUDRATE		'b','a','u','d','r','a','t','e'
 #define __TRESHOLD1		't','r','e','s','h','o','l','d','1'
 #define __TRESHOLD2		't','r','e','s','h','o','l','d','2'
 #define __TIMEINT1		't','i','m','e','i','n','t','1'
