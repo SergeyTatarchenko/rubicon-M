@@ -99,8 +99,7 @@ void peripheral_config()
 	USART6->CR2 &= ~USART_CR2_STOP;
 	//USART6->CR3 |=  USART_CR3_DMAT;
 	
-	/*19200 baudrate, APB2 clock is 60 MHz*/
-	USART6->BRR = 0xC35;
+	setup_serial_speed(&CONFIG,0);
 }
 
 

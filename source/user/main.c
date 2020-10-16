@@ -23,6 +23,7 @@ int main()
 	
 	BaseType_t _AllOk_;
 	SysClkUpd();
+	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
 	sys_init();
 	
 	_AllOk_ = Init_();

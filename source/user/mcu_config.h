@@ -11,7 +11,7 @@
 /*----------------------------------------------------------------------*/
 
 /*
-RUBICON revision A0 pinout description:
+RUBICON revision A1 pinout description:
   
     ADDRESS pins:
         ADDR0 - PC0
@@ -31,8 +31,6 @@ RUBICON revision A0 pinout description:
         ALARM1 - PA2
         SIGN0  - PA4
         SIGN1  - PA5
-        SIGN2  - PA6
-        SIGN3  - PA7
     
     LED pinout:
         ZONE 0 LED ALARM - PA8
@@ -51,11 +49,6 @@ RUBICON revision A0 pinout description:
         TX  - PC6 
         RX  - PC7
         RTS - PC8
-
-    service serial port pinout:
-        TX  - PB10
-        RX  - PB11
-        RTS - PB12
 
 */
 
@@ -105,6 +98,14 @@ sector #3 16KB size, 48KB limit flash memory for user program
 
 #define ADC_DEPTH		4096
 #define INT_ADC_REF		3300	/*mV*/
+
+/*usart baudrate table for 60 MHz bus clock*/
+
+#define SERIAL_SPEED_9600	0xC35
+#define SERIAL_SPEED_19200	0xC35
+#define SERIAL_SPEED_38400	0xC35
+#define SERIAL_SPEED_57600	0xC35
+#define SERIAL_SPEED_115200	0xC35
 
 /*----------------------------------------------------------------------*/
 void pin_config(void);

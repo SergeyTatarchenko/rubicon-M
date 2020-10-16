@@ -394,9 +394,6 @@ void _task_state_update(void *pvParameters)
 	static DEVICE_STATE_TypeDef local_state = S_NORMAL;
 	static DEVICE_MODE local_mode = NORMAL;
 	
-	/*load configuration data*/
-	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
-	
 	/* convert flash treshold value from mV to int*/
 	zone_0_treshold = adc_covert_from_mv(CONFIG.data.zone_0_treshold);
 	zone_1_treshold = adc_covert_from_mv(CONFIG.data.zone_1_treshold);

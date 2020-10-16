@@ -563,11 +563,21 @@ void serial_print_state( void )
 
 void serial_print_config()
 {
-	const int array_size = 5;
+	const int array_size = 6;
 	char array[array_size];
 	mprintf(__NEWLINE);
 	mprintf(__POSLINE);
 	mprintf("ТЕКУЩАЯ КОНФИГУРАЦИЯ СИСТЕМЫ :\r\n");
+	/********************************************/
+	mprintf(__NEWLINE);
+	itoa(CONFIG.data.serial_baudrate,array,array_size);
+	mprintf("Текущая скорость RS-485 : ");
+	for(int i = 0; i < array_size; i++)
+	{
+		array[i]+=0x30;
+	}
+	mprintf(array);
+	memset(array,0,array_size);
 	/********************************************/
 	mprintf(__NEWLINE);
 	itoa(CONFIG.data.zone_0_timeint,array,array_size);

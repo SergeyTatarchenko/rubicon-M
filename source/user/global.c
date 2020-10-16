@@ -113,11 +113,67 @@ void GetHwModeState( MODE_TypeDef *state )
 }
 
 /*
-* bind current  output hardware state with global union OUTPUTS
+* setup serial speed,return TRUE if success, return FALSE if input value incorrect
+* setup speed 19200 as default
 */
-void GetHwOutState ( OUTPUTS_TypeDef* state )
+uint8_t setup_serial_speed( CONFIG_TypeDef* config, uint32_t speed )
 {
-
+	uint8_t state = TRUE;
+	USART6->CR1 &= ~USART_CR1_UE;
+	/*setup usart speed when new value received */
+	if(speed != 0)
+	{
+		switch (speed)
+		{ 	case 9600:
+			config->data.serial_baudrate = speed;
+				break;
+			case 19200:
+				config->data.serial_baudrate = speed;
+				break;
+			case 38400:
+				config->data.serial_baudrate = speed;
+				break;
+			case 57600:
+				config->data.serial_baudrate = speed;
+				break;
+			case 115200:
+				config->data.serial_baudrate = speed;
+				break;
+			default:
+				state = FALSE;
+				break;
+		}
+	}
+	else
+	{
+		/*setup usart speed after reboot*/
+		switch(config->data.serial_baudrate)
+		{
+			case 9600:
+				USART6->BRR = SERIAL_SPEED_9600;
+				break;
+			case 19200:
+				USART6->BRR = SERIAL_SPEED_19200;
+				break;
+			case 38400:
+				USART6->BRR = SERIAL_SPEED_38400;
+				break;
+			case 57600:
+				USART6->BRR = SERIAL_SPEED_57600;
+				break;
+			case 115200:
+				USART6->BRR = SERIAL_SPEED_115200;
+				break;
+			default:
+				USART6->BRR = SERIAL_SPEED_19200;
+				config->data.serial_baudrate = 19200;
+				break;
+		}
+	}
+	
+	USART6->CR1 |= USART_CR1_UE;
+	
+	return state;
 }
 
 /*
