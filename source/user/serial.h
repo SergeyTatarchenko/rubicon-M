@@ -18,7 +18,7 @@
 #define COMMAND_BUF_SIZE		32	/*32 byte */
 #define SERVICE_COMMBUFF_SIZE	2	/*two commands in queue*/
 #define NUM_OF_COMMANDS			6
-#define NUM_OF_ARGUMENTS		10
+#define NUM_OF_ARGUMENTS		11
 #define MAX_VALUE_LENGHT		5
 
 /*enum of user commands*/

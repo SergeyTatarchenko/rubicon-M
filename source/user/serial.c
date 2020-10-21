@@ -27,6 +27,7 @@ static const char user_arguments[NUM_OF_ARGUMENTS][COMMAND_BUF_SIZE] =
 	{__ADDRESS},
 	{__STATE},
 	{__CONFIG},
+	{__BAUDRATE},
 	{__TRESHOLD1},
 	{__TRESHOLD2},
 	{__TIMEINT1},
@@ -218,7 +219,7 @@ void serial_command_executor (TCmdTypeDef command)
 		/*print help textblock*/
 		case C_HELP:
 			mprintf(__POSLINE);
-			terminal_print_txtblock(help_text,20);
+			terminal_print_txtblock(help_text,21);
 			mprintf(__POSLINE);
 			break;
 		/*save current config to flash
