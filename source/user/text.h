@@ -63,6 +63,7 @@
 #define __SHOW	's','h','o','w'
 #define __SET	's','e','t'
 #define __DEBUG	'd','e','b','u','g'
+#define __PING	'p','i','n','g'
 
 
 /*arguments*/

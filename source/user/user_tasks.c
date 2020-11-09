@@ -173,29 +173,31 @@ void _task_service_serial(void *pvParameters)
 		if((trigger == FALSE) && (mode == PROGRAMMING_SS))
 		{
 			trigger = TRUE;
-			serial_print_welcome();
+			//serial_print_welcome();
 		}
 		/*command buffer not empty*/
 		if(uxQueueMessagesWaiting( service_serial_queue ) != 0)
 		{
 			xQueueReceive(service_serial_queue,&buffer,portMAX_DELAY);
-			mprintf("input command: ");
-			mprintf(buffer);
-			mprintf(__NEWLINE);
-			input_command = command_processing(buffer);
-			
-			if(input_command.command == C_EXIT)
+			if(GetAddressFromBuf(buffer))
 			{
-				trigger = FALSE;
+				input_command = command_processing(buffer);
+				if(input_command.command == C_EXIT)
+				{
+					trigger = FALSE;
+				}
+				serial_command_executor(input_command);			
 			}
-			serial_command_executor(input_command);
+				memset(buffer,0,COMMAND_BUF_SIZE);
 		}
 		/*send header message every 2s to terminal*/
+		/*
 		if((mode == IDLE) && tick %40 == 0)
 		{
 			mprintf(__NEWLINE);
 			mprintf(__HEADER_MESSAGE);
 		}
+		*/
 		vTaskDelay(SERIAL_UPDATE_RATE);
 	}
 }

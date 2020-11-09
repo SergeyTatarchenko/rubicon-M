@@ -17,7 +17,7 @@
 
 #define COMMAND_BUF_SIZE		32	/*32 byte */
 #define SERVICE_COMMBUFF_SIZE	2	/*two commands in queue*/
-#define NUM_OF_COMMANDS			6
+#define NUM_OF_COMMANDS			7
 #define NUM_OF_ARGUMENTS		11
 #define MAX_VALUE_LENGHT		5
 
@@ -29,6 +29,7 @@ typedef enum {
 	C_SHOW,
 	C_SET,
 	C_DEBUG,
+	C_PING,
 	C_ERROR
 }COMMANDS;
 
@@ -77,6 +78,6 @@ void serial_print_mode( void );
 void serial_print_welcome( void );
 void serial_debug_output( void );
 void serial_command_executor ( TCmdTypeDef command );
-
+uint8_t GetAddressFromBuf(char * buff);
 #endif
 /****************************end of file ********************************/

@@ -17,7 +17,8 @@ static const char user_commands[NUM_OF_COMMANDS][COMMAND_BUF_SIZE] =
 	{__SAVE},
 	{__SHOW},
 	{__SET},
-	{__DEBUG}
+	{__DEBUG},
+	{__PING}
 };
 
 /*user args for array compare*/
@@ -86,6 +87,69 @@ void terminal_print_txtblock(const char ( *buff )[__STRLEN], size_t strnum)
 	}
 }
 
+uint8_t GetAddressFromBuf(char * buff)
+{
+	char address[COMMAND_BUF_SIZE] = {0};
+	int message_lenght = strlen(buff);
+	int address_lenght = 0,address_int = 0;
+	
+	for(int i = 0; i < message_lenght; i++)
+	{
+		if(buff[i] == __WHITESPACE)
+		{
+			break;
+		}
+		else
+		{
+			address[i] = buff[i];
+		}
+	}
+	address_lenght = strlen(address);
+	if(address_lenght > 2)
+	{
+		return FALSE;
+	}
+	
+	for(int i = 0; i < address_lenght; i++)
+	{
+		if(address[i] != 0)
+		{
+			if((address[i] > 0x39)||(address[i] < 0x30))
+			{
+				return FALSE;
+			}
+			else
+			{
+				address[i] = address[i] - 0x030;
+			}
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+	if(address_lenght == 2)
+	{
+		address_int = address[1] +address[0]*10; 
+	}
+	else if(address_lenght == 1)
+	{
+		address_int = address[0];
+	}
+	else if(address_lenght == 0)
+	{
+		return FALSE;
+	}
+	GetHwAdrState(&ADDRESS);
+	if(ADDRESS.byte == address_int)
+	{
+		memcpy(address,buff,COMMAND_BUF_SIZE);
+		memset(buff,0,COMMAND_BUF_SIZE);
+		memcpy(buff,address + 1 + address_lenght ,COMMAND_BUF_SIZE);
+		return TRUE;
+	}
+	return FALSE;
+}
 
 /*
 * name : command_processing
@@ -348,6 +412,9 @@ void serial_command_executor (TCmdTypeDef command)
 			mode = DEBUG;
 			mprintf(__POSLINE);
 			mprintf("current adc values : \r\n");
+			break;
+		case C_PING:
+			serial_print_welcome();
 			break;
 		/*error in input*/
 		case C_ERROR:
