@@ -27,7 +27,7 @@ DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration);
 
 void serial_data_proc( char byte );
 void def_data_proc   ( char byte );
-void mode_switcher   ( char byte );
+void ModeSwitcher   ( char byte );
 
 void zone_0_timer_handler (TimerHandle_t xTimer);
 void zone_1_timer_handler (TimerHandle_t xTimer);

@@ -75,6 +75,9 @@ static const char welcome_text[8][__STRLEN] =
 	{__WELCOME_BLOCK_6},
 	{__WELCOME_BLOCK_7}
 };
+
+char address_string[MAX_VALUE_LENGHT] = {0};
+
 /*
 * name : terminal_print_txtblock
 * description : print text block from two-dimm array (STATIC only!!, lenght defined as __STRLEN)
@@ -89,66 +92,34 @@ void terminal_print_txtblock(const char ( *buff )[__STRLEN], size_t strnum)
 
 uint8_t GetAddressFromBuf(char * buff)
 {
-	char address[COMMAND_BUF_SIZE] = {0};
+	char temp[COMMAND_BUF_SIZE] = {0};
 	int message_lenght = strlen(buff);
 	int address_lenght = 0,address_int = 0;
 	
-	for(int i = 0; i < message_lenght; i++)
-	{
-		if(buff[i] == __WHITESPACE)
-		{
-			break;
-		}
-		else
-		{
-			address[i] = buff[i];
-		}
-	}
-	address_lenght = strlen(address);
-	if(address_lenght > 2)
-	{
-		return FALSE;
-	}
-	
-	for(int i = 0; i < address_lenght; i++)
-	{
-		if(address[i] != 0)
-		{
-			if((address[i] > 0x39)||(address[i] < 0x30))
-			{
-				return FALSE;
-			}
-			else
-			{
-				address[i] = address[i] - 0x030;
-			}
-		}
-		else
-		{
-			return FALSE;
-		}
-	}
-	if(address_lenght == 2)
-	{
-		address_int = address[1] +address[0]*10; 
-	}
-	else if(address_lenght == 1)
-	{
-		address_int = address[0];
-	}
-	else if(address_lenght == 0)
-	{
-		return FALSE;
-	}
 	GetHwAdrState(&ADDRESS);
+	address_int = atoi(buff);
 	if(ADDRESS.byte == address_int)
 	{
-		memcpy(address,buff,COMMAND_BUF_SIZE);
+		for(; address_lenght < message_lenght; address_lenght++)
+		{
+			if(buff[address_lenght] == __WHITESPACE)
+			{
+				break;
+			}
+		}
+		memset(address_string,0,address_lenght);
+		memcpy(address_string,buff,address_lenght);
+		
+		address_lenght++;
+		memcpy(temp,&buff[address_lenght],message_lenght);
 		memset(buff,0,COMMAND_BUF_SIZE);
-		memcpy(buff,address + 1 + address_lenght ,COMMAND_BUF_SIZE);
+		memcpy(buff,temp,message_lenght);
 		return TRUE;
 	}
-	return FALSE;
+	else
+	{
+		return FALSE;
+	}
 }
 
 /*
@@ -195,7 +166,7 @@ int num_of_symbols = 0;
 	/*get command number from enum*/
 	for(int i = 0; i < NUM_OF_COMMANDS; i++)
 	{
-		if(command_parser(command,user_commands[i]))
+		if(!strcmp(command,user_commands[i]))
 		{
 			out.command = (COMMANDS)i;
 			break;
@@ -236,7 +207,7 @@ int num_of_symbols = 0;
 		/*get argument number from enum*/
 		for(int i = 0; i < NUM_OF_ARGUMENTS; i++)
 		{
-			if(command_parser(arg_1,user_arguments[i]))
+			if(!strcmp(arg_1,user_arguments[i]))
 			{
 				out.argument = (ARGUMENTS)i;
 				break;
@@ -262,7 +233,7 @@ int num_of_symbols = 0;
 					counter++;
 				}
 			}
-			out.value = chatoi(arg_2,COMMAND_BUF_SIZE);
+			out.value = atoi(arg_2);
 		}
 	}
 	return out;
@@ -270,16 +241,25 @@ int num_of_symbols = 0;
 /* name: serial_command_executor
 *  descriprion: execute commands from terminal in service serial task
 */
-void serial_command_executor (TCmdTypeDef command)
+void serial_command_executor (TCmdTypeDef command, const char *buff)
 {
+	char answer[COMMAND_BUF_SIZE] = {0};
+	if((command.command != C_PING)&&(command.command != C_EXIT)&&(command.command != C_SAVE))
+	{
+		sprintf(answer,"%s %s\r\n",address_string,buff);
+		mprintf(answer);
+	}
+	else
+	{
+		sprintf(answer,"%s ok %s\r\n",address_string,buff);
+		mprintf(answer);
+	}
 	switch(command.command)
 	{
 		/*exit from programming mode*/
 		case C_EXIT:
 			mode = NORMAL;
-			mprintf(__OUT_MESSAGE);
-			mprintf(__POSLINE);
-		break;
+			break;
 		/*print help textblock*/
 		case C_HELP:
 			mprintf(__POSLINE);
@@ -290,14 +270,13 @@ void serial_command_executor (TCmdTypeDef command)
 		WARNING!!! CPU stop during flash programming*/
 		case C_SAVE:
 			flash_data_write(CONFIG_FLASH_ADDRESS,CONFIG_SECTOR_NUMBER,CONFIG.array,sizeof(CONFIG));
-			mprintf("ok\r\n");
 			break;
 		/*show something (see argument)*/
 		case C_SHOW:
 			switch(command.argument)
 			{
 				case A_ADDRESS:
-					serial_print_adress();
+					serial_print_address();
 					break;
 				case A_MODE:
 					serial_print_mode();
@@ -309,8 +288,7 @@ void serial_command_executor (TCmdTypeDef command)
 					serial_print_config();
 					break;
 				default:
-					mprintf(__ERROR_MESSAGE);
-					mprintf(__NEWLINE);
+					mprintf("error\r\n");
 					break;
 			}
 			break;
@@ -326,8 +304,7 @@ void serial_command_executor (TCmdTypeDef command)
 					}
 					else
 					{
-						mprintf(__ERROR_MESSAGE);
-						mprintf(__NEWLINE);
+						mprintf("error\r\n");
 					}
 					break;
 				case A_TIMEINT2:
@@ -338,8 +315,7 @@ void serial_command_executor (TCmdTypeDef command)
 					}
 					else
 					{
-						mprintf(__ERROR_MESSAGE);
-						mprintf(__NEWLINE);
+						mprintf("error\r\n");
 					}
 					break;
 				case A_TRESHOLD1:
@@ -350,8 +326,7 @@ void serial_command_executor (TCmdTypeDef command)
 					}
 					else
 					{
-						mprintf(__ERROR_MESSAGE);
-						mprintf(__NEWLINE);
+						mprintf("error\r\n");
 					}
 					break;
 				case A_TRESHOLD2:
@@ -362,8 +337,7 @@ void serial_command_executor (TCmdTypeDef command)
 					}
 					else
 					{
-						mprintf(__ERROR_MESSAGE);
-						mprintf(__NEWLINE);
+						mprintf("error\r\n");
 					}
 					break;
 				case A_TRIGLIMIT1:
@@ -374,8 +348,7 @@ void serial_command_executor (TCmdTypeDef command)
 					}
 					else
 					{
-						mprintf(__ERROR_MESSAGE);
-						mprintf(__NEWLINE);
+						mprintf("error\r\n");
 					}
 					break;
 				case A_TRIGLIMIT2:
@@ -386,8 +359,7 @@ void serial_command_executor (TCmdTypeDef command)
 					}
 					else
 					{
-						mprintf(__ERROR_MESSAGE);
-						mprintf(__NEWLINE);
+						mprintf("error\r\n");
 					}
 				case A_BAUDRATE:
 					if(command.value != 0)
@@ -398,13 +370,11 @@ void serial_command_executor (TCmdTypeDef command)
 					}
 					else
 					{
-						mprintf(__ERROR_MESSAGE);
-						mprintf(__NEWLINE);
+						mprintf("error\r\n");
 					}
 					break;
 				default:
-					mprintf(__ERROR_MESSAGE);
-					mprintf(__NEWLINE);
+					mprintf("error\r\n");
 					break;
 			}
 			break;
@@ -414,107 +384,14 @@ void serial_command_executor (TCmdTypeDef command)
 			mprintf("current adc values : \r\n");
 			break;
 		case C_PING:
-			serial_print_welcome();
 			break;
 		/*error in input*/
 		case C_ERROR:
-			mprintf(__ERROR_MESSAGE);
-			mprintf(__NEWLINE);
+			mprintf("error\r\n");
 			break;
 		default:
 			break;
 	}
-}
-/*
-* name : command_parser
-* description : compare user string with array, return 1 if it match
-*/
-int command_parser(char* buff_1,const char* buff_2)
-{
-	int command_matced = 1;
-	for(int i = 0; i < COMMAND_BUF_SIZE ; i ++)
-	{
-		if(buff_1[i] != buff_2[i])
-		{
-			command_matced = 0;
-			break;
-		}
-	}
-	return command_matced;
-}
-/*
-* name : itoa
-* description : convert integer to array
-*/
-uint32_t itoa(int i,char *buff,uint8_t MesSize)
-{
-	int temp = i,counter = 0,offset;
-	uint32_t array_size;
-	if( i > 0)
-	{
-		while(temp != 0)
-		{
-			temp/=10;
-			counter++;
-		}
-		array_size = (uint32_t)counter;
-		temp = i;
-		offset = MesSize - counter;
-		do
-		{
-			buff[(counter-1)+offset] = temp % 10;
-			counter--;
-			temp/=10;
-		}
-		while(counter!=0);
-		if(array_size < MesSize)
-		{
-			for(counter = 0; counter < (MesSize-array_size); counter++)
-			{
-			buff[counter] = 0;
-			}
-		}
-	}
-	else if(i == 0)
-	{
-		for(counter = 0; counter < MesSize; counter++)
-		{
-			buff[counter] = 0;
-		}
-	} 
-	return array_size;
-}
-
-/*
-* name : atoi
-* description : convert array to integer
-*/
-uint32_t chatoi(char *buff,int size)
-{
-	uint32_t number = 0;
-	int counter = 0;
-	for(int i = 0; i < size; i++)
-	{
-		if(buff[i]!=0)
-		{
-			if((buff[i] > 0x39)||(buff[i] < 0x30))
-			{
-				number = 0;
-				return number;
-			}
-			else
-			{
-				buff[i] = buff[i] - 0x030;
-				counter++;
-			}
-		}
-	}
-	number = buff[0]*10000+buff[1]*1000+buff[2]*100+buff[3]*10+buff[4];
-	for(int i = 0;i < MAX_VALUE_LENGHT - counter; i++)
-	{
-		number /=10;
-	}
-	return number;
 }
 
 /* name: serial_send_byte
@@ -540,230 +417,74 @@ LOCAL PRINT FUNCTIONS
 */
 void serial_debug_output( void )
 {
-	itoa(ADC_VALUES.alrm_0,ADC_CHANNELS.ch_1,4);
-	itoa(ADC_VALUES.alrm_1,ADC_CHANNELS.ch_2,4);
-	itoa(ADC_VALUES.sign_0,ADC_CHANNELS.ch_4,4);
-	itoa(ADC_VALUES.sign_1,ADC_CHANNELS.ch_5,4);
-	for(int i = 0;i < 4; i++)
-	{
-		ADC_CHANNELS.ch_1[i]+=0x30;
-		ADC_CHANNELS.ch_2[i]+=0x30;
-		ADC_CHANNELS.ch_4[i]+=0x30;
-		ADC_CHANNELS.ch_5[i]+=0x30;
-	}
+	sprintf(ADC_CHANNELS.ch_1,"%d",ADC_VALUES.alrm_0);
+	sprintf(ADC_CHANNELS.ch_2,"%d",ADC_VALUES.alrm_1);
+	sprintf(ADC_CHANNELS.ch_3,"%d",ADC_VALUES.sign_0);
+	sprintf(ADC_CHANNELS.ch_4,"%d",ADC_VALUES.sign_1);
+	
 	mprintf(" adc ch 1 : ");
 	cprintf(ADC_CHANNELS.ch_1,4);
 	mprintf(" adc ch 2 : ");
 	cprintf(ADC_CHANNELS.ch_2,4);
 	mprintf(" adc ch 4 : ");
-	cprintf(ADC_CHANNELS.ch_4,4);
+	cprintf(ADC_CHANNELS.ch_3,4);
 	mprintf(" adc ch 5 : ");
-	cprintf(ADC_CHANNELS.ch_5,4);
+	cprintf(ADC_CHANNELS.ch_4,4);
 	mprintf("\r");
 	
 }
 
-void serial_print_adress()
+void serial_print_address()
 {
-	char address_txt[3];
-	itoa(ADDRESS.byte,address_txt,3);
-	mprintf(__POSLINE);
-	mprintf("Текущий адрес устройства в сети : ");
-	
-	for(int i = 0; i < 3; i++)
-	{
-		address_txt[i]+=0x30;
-	}
-	mprintf(address_txt);
-	mprintf(__NEWLINE);
-	mprintf(__POSLINE);
+	const int array_size = MAX_VALUE_LENGHT + 1;
+	char array[array_size];
+	sprintf(array,"%d\r\n",ADDRESS.byte);
+	mprintf(array);
+	memset(array,0,array_size);
 }
 
 void serial_print_state( void )
 {
-	mprintf(__POSLINE);
-	mprintf("Текущее состояние зон:\r\n");
-	mprintf(" Зона 1 тревога : ");
-	
-	if(OUTPUTS.bit.zone_0_alarm == 1)
-	{
-		mprintf("Да");
-	}
-	else
-	{
-		mprintf("Нет");
-	}
-	mprintf(__NEWLINE);
-	mprintf(" Зона 1 ошибка  : ");
-	if(OUTPUTS.bit.zone_0_error == 1)
-	{
-		mprintf("Да");
-	}
-	else
-	{
-		mprintf("Нет");
-	}
-	mprintf(__NEWLINE);
-	mprintf(" Зона 2 тревога : ");
-	
-	if(OUTPUTS.bit.zone_1_alarm == 1)
-	{
-		mprintf("Да");
-	}
-	else
-	{
-		mprintf("Нет");
-	}
-	mprintf(__NEWLINE);
-	mprintf(" Зона 2 ошибка  : ");
-	if(OUTPUTS.bit.zone_1_error == 1)
-	{
-		mprintf("Да");
-	}
-	else
-	{
-		mprintf("Нет");
-	}
-	mprintf(__NEWLINE);
-	mprintf(__POSLINE);
 }
 
 
 void serial_print_config()
 {
-	const int array_size = 6;
+	const int array_size = MAX_VALUE_LENGHT + 1;
 	char array[array_size];
-	mprintf(__NEWLINE);
-	mprintf(__POSLINE);
-	mprintf("ТЕКУЩАЯ КОНФИГУРАЦИЯ СИСТЕМЫ :\r\n");
 	/********************************************/
-	mprintf(__NEWLINE);
-	itoa(CONFIG.data.serial_baudrate,array,array_size);
-	mprintf("Текущая скорость RS-485 : ");
-	for(int i = 0; i < array_size; i++)
-	{
-		array[i]+=0x30;
-	}
+	sprintf(array,"%d\r\n",CONFIG.data.serial_baudrate);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
-	mprintf(__NEWLINE);
-	itoa(CONFIG.data.zone_0_timeint,array,array_size);
-	mprintf("Временное окно зоны 1, с : ");
-	for(int i = 0; i < array_size; i++)
-	{
-		array[i]+=0x30;
-	}
+	sprintf(array,"%d\r\n",CONFIG.data.zone_0_timeint);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
-	mprintf(__NEWLINE);
-	itoa(CONFIG.data.zone_1_timeint,array,array_size);
-	mprintf("Временное окно зоны 2, с : ");
-	for(int i = 0; i < array_size; i++)
-	{
-		array[i]+=0x30;
-	}
+	sprintf(array,"%d\r\n",CONFIG.data.zone_1_timeint);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
-	mprintf(__NEWLINE);
-	/********************************************/
-	mprintf(__NEWLINE);
-	itoa(CONFIG.data.zone_0_treshold,array,array_size);
-	mprintf("Порог срабатывания зоны 1, мВ : ");
-	for(int i = 0; i < array_size; i++)
-	{
-		array[i]+=0x30;
-	}
+	sprintf(array,"%d\r\n",CONFIG.data.zone_0_triglimit);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
-	mprintf(__NEWLINE);
-	itoa(CONFIG.data.zone_1_treshold,array,array_size);
-	mprintf("Порог срабатывания зоны 2, мВ : ");
-	for(int i = 0; i < array_size; i++)
-	{
-		array[i]+=0x30;
-	}
+	sprintf(array,"%d\r\n",CONFIG.data.zone_1_triglimit);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
-	mprintf(__NEWLINE);
-	/********************************************/
-	mprintf(__NEWLINE);
-	itoa(CONFIG.data.zone_0_triglimit,array,array_size);
-	mprintf("Предельное число срабатываний за интервал зоны 1 : ");
-	for(int i = 0; i < array_size; i++)
-	{
-		array[i]+=0x30;
-	}
+	sprintf(array,"%d\r\n",CONFIG.data.zone_0_treshold);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
-	mprintf(__NEWLINE);
-	itoa(CONFIG.data.zone_1_triglimit,array,array_size);
-	mprintf("Предельное число срабатываний за интервал зоны 2 : ");
-	for(int i = 0; i < array_size; i++)
-	{
-		array[i]+=0x30;
-	}
+	sprintf(array,"%d\r\n",CONFIG.data.zone_1_treshold);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
-	mprintf(__NEWLINE);
-	mprintf(__POSLINE);
 }
 
 void serial_print_mode()
 {
-	mprintf(__POSLINE);
-	mprintf("Текущее состояние системы:\r\n");
-	mprintf(" Контроль зоны 1 : ");
-	
-	if(MODE.bit.zone0_enable == 1)
-	{
-		mprintf("Активен");
-	}
-	else
-	{
-		mprintf("Отключен");
-	}
-	mprintf(__NEWLINE);
-	
-	mprintf(" Режим работы зоны 1 : ");
-	if(MODE.bit.zone0_mode == 0)
-	{
-		mprintf("Легкий тип ограждения");
-	}
-	else
-	{
-		mprintf("Тяжелый тип ограждения");
-	}
-	mprintf(__NEWLINE);
-	mprintf(" Контроль зоны 2 : ");
-	
-	if(MODE.bit.zone1_enable == 1)
-	{
-		mprintf("Активен");
-	}
-	else
-	{
-		mprintf("Отключен");
-	}
-	mprintf(__NEWLINE);
-	
-	mprintf(" Режим работы зоны 2 : ");
-	if(MODE.bit.zone1_mode == 0)
-	{
-		mprintf("Легкий тип ограждения");
-	}
-	else
-	{
-		mprintf("Тяжелый тип ограждения");
-	}
-	mprintf(__NEWLINE);
-	mprintf(__POSLINE);
 }
 
 void serial_print_welcome()

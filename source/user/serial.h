@@ -10,6 +10,10 @@
 /*-----------------------------includes---------------------------------------*/
 #include "stdint.h"
 #include "string.h"
+#include "stdlib.h"
+#include "stdio.h"
+
+
 #include "text.h"
 #include "stm32f2xx.h"
 /*-------------------------global defines-------------------------------------*/
@@ -57,9 +61,8 @@ typedef struct {
 }TCmdTypeDef;
 
 
-
+extern char address_string[MAX_VALUE_LENGHT];
 /*---------------------local function prototypes------------------------------*/
-uint32_t itoa(int i,char *buff,uint8_t MesSize);
 uint32_t chatoi(char *buff,int size);
 
 void serial_send_byte(USART_TypeDef* port,const char byte);
@@ -72,12 +75,12 @@ int command_parser(char* buff_1,const char* buff_2);
 void terminal_print_txtblock( const char ( *buff )[__STRLEN], size_t strnum);
 
 void serial_print_state( void );
-void serial_print_adress( void );
+void serial_print_address( void );
 void serial_print_config( void );
 void serial_print_mode( void );
 void serial_print_welcome( void );
 void serial_debug_output( void );
-void serial_command_executor ( TCmdTypeDef command );
+void serial_command_executor ( TCmdTypeDef command , const char *buff );
 uint8_t GetAddressFromBuf(char * buff);
 #endif
 /****************************end of file ********************************/

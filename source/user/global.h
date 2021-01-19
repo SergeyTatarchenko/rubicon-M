@@ -109,8 +109,8 @@ typedef struct {
 	
 	char ch_1[4];
 	char ch_2[4];
+	char ch_3[4];
 	char ch_4[4];
-	char ch_5[4];
 	
 }ADC_CHANNELS_TypeDef;
 

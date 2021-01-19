@@ -36,13 +36,13 @@ void USART6_IRQHandler()
 		{
 			case NORMAL:
 				/*<mode switcher/>*/
-				mode_switcher(byte);
+				ModeSwitcher(byte);
 				/*</mode switcher>*/
 				/*777 data proc*/
 				break;
 			case ALARM:
 				/*<mode switcher/>*/
-				mode_switcher(byte);
+				ModeSwitcher(byte);
 				/*</mode switcher>*/
 				/*777 data proc*/
 				break;
@@ -62,10 +62,10 @@ void USART6_IRQHandler()
 	}
 }
 
-/* name: mode_switcher
+/* name: ModeSwitcher
 *  descriprion: switch board mode via serial port 
 */
-void mode_switcher( char byte )
+void ModeSwitcher( char byte )
 {
 	static int switch_mode_cnt = 0;
 	if(byte == SWITCH_BYTE)
@@ -150,7 +150,6 @@ void serial_data_proc(char byte)
 void _task_service_serial(void *pvParameters)
 {
 	const int tick_overload = 3600;
-	static uint8_t trigger = FALSE;
 	static int tick = 0;
 	TCmdTypeDef input_command;
 	char buffer[COMMAND_BUF_SIZE] = {0};
@@ -169,12 +168,6 @@ void _task_service_serial(void *pvParameters)
 		{
 			serial_debug_output();
 		}
-		/*print welcome message in programming mode*/
-		if((trigger == FALSE) && (mode == PROGRAMMING_SS))
-		{
-			trigger = TRUE;
-			//serial_print_welcome();
-		}
 		/*command buffer not empty*/
 		if(uxQueueMessagesWaiting( service_serial_queue ) != 0)
 		{
@@ -182,22 +175,10 @@ void _task_service_serial(void *pvParameters)
 			if(GetAddressFromBuf(buffer))
 			{
 				input_command = command_processing(buffer);
-				if(input_command.command == C_EXIT)
-				{
-					trigger = FALSE;
-				}
-				serial_command_executor(input_command);			
+				serial_command_executor(input_command,buffer);
 			}
 				memset(buffer,0,COMMAND_BUF_SIZE);
 		}
-		/*send header message every 2s to terminal*/
-		/*
-		if((mode == IDLE) && tick %40 == 0)
-		{
-			mprintf(__NEWLINE);
-			mprintf(__HEADER_MESSAGE);
-		}
-		*/
 		vTaskDelay(SERIAL_UPDATE_RATE);
 	}
 }

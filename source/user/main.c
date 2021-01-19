@@ -74,7 +74,7 @@ BaseType_t Init_()
 	
 	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
 									NULL, MEM_ALLOCATION.user_priority , NULL );
-	TaskCreation = xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
+	TaskCreation &= xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
 									NULL, MEM_ALLOCATION.user_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",MEM_ALLOCATION.stack_serial,
 									NULL, MEM_ALLOCATION.serial_priority , NULL );

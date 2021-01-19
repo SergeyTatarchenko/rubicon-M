@@ -7,7 +7,7 @@
 #ifndef RYBICON_777_H_
 #define	RYBICON_777_H_
 
-#include "stdint.h"
+#include "serial.h"
 #include "mcu_config.h"
 #include "global.h"
 /*----------------------------------------------------------------------*/
@@ -81,6 +81,6 @@ typedef struct
 #pragma pack(pop)
 /*----------------------------------------------------------------------*/
 void rubicon_send_answ( void );
-
+void rubicon_to_vpu( void );
 #endif
 /****************************end of file ********************************/
