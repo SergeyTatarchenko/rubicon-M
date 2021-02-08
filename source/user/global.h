@@ -172,7 +172,7 @@ void GetHwOutState ( OUTPUTS_TypeDef* state );
 uint16_t adc_covert_from_mv( uint16_t value );
 uint16_t adc_covert_to_mv( uint16_t value );
 uint8_t Crc8( uint8_t *pcBlock, uint8_t len );
-void mode_update( DEVICE_MODE new_mode );
+void ModeUpdate( DEVICE_MODE new_mode );
 uint8_t setup_serial_speed( CONFIG_TypeDef* config, uint32_t speed );
 #endif
 /****************************end of file ********************************/

@@ -12,9 +12,11 @@
 /*value from CONFIG struct converted from mV*/
 static uint16_t zone_0_treshold = 0;
 static uint16_t zone_1_treshold = 0;
+
 /*value from CONFIG struct converted from s*/
 static uint32_t zone_0_timeint = 0;
 static uint32_t zone_1_timeint = 0;
+
 /*software timers instance and id*/
 const unsigned portBASE_TYPE zone_0_timerID = 1;
 const unsigned portBASE_TYPE zone_1_timerID = 2;
@@ -22,8 +24,9 @@ const unsigned portBASE_TYPE zone_1_timerID = 2;
 TimerHandle_t zone_0_timer;
 TimerHandle_t zone_1_timer;
 
-/* name: USART6_IRQHandler
-*  descriprion: interrupt handler for RS 485 port communication
+/* 
+* name: USART6_IRQHandler
+* descriprion: interrupt handler for RS 485 port communication
 */
 void USART6_IRQHandler()
 {
@@ -32,7 +35,7 @@ void USART6_IRQHandler()
 	if(USART6->SR &= USART_SR_RXNE)
 	{
 		byte = USART6->DR;
-		switch(mode)
+		switch(mode) 
 		{
 			case NORMAL:
 				/*<mode switcher/>*/
@@ -73,7 +76,7 @@ void ModeSwitcher( char byte )
 		if((switch_mode_cnt == SWITCH_SEQ_LENGHT) &&
 			((mode== NORMAL)||(mode == ALARM)))
 		{
-			mode_update(IDLE);
+			ModeUpdate(IDLE);
 			switch_mode_cnt = 0;
 		}
 		else
@@ -126,10 +129,10 @@ void serial_data_proc(char byte)
 		switch(mode)
 		{
 			case IDLE:
-				mode_update(PROGRAMMING_SS);
+				ModeUpdate(PROGRAMMING_SS);
 				break;
 			case DEBUG:
-				mode_update(PROGRAMMING_SS);
+				ModeUpdate(PROGRAMMING_SS);
 				break;
 			case PROGRAMMING_SS:
 				/*send data to queue (command extracted in _task_service_serial function)*/
@@ -149,20 +152,10 @@ void serial_data_proc(char byte)
 */
 void _task_service_serial(void *pvParameters)
 {
-	const int tick_overload = 3600;
-	static int tick = 0;
 	TCmdTypeDef input_command;
 	char buffer[COMMAND_BUF_SIZE] = {0};
 	while(TRUE)
 	{
-		if(tick > tick_overload)
-		{
-			tick = 0;
-		}
-		else
-		{
-			tick++;
-		}
 		/*debug ADC output*/
 		if(mode == DEBUG)
 		{
@@ -172,7 +165,13 @@ void _task_service_serial(void *pvParameters)
 		if(uxQueueMessagesWaiting( service_serial_queue ) != 0)
 		{
 			xQueueReceive(service_serial_queue,&buffer,portMAX_DELAY);
-			if(GetAddressFromBuf(buffer))
+			
+			input_command = command_processing(buffer);
+			if(input_command.command == C_EXIT)
+			{
+				mode = NORMAL;
+			}
+			else if(GetAddressFromBuf(buffer))
 			{
 				input_command = command_processing(buffer);
 				serial_command_executor(input_command,buffer);
@@ -423,7 +422,7 @@ void _task_state_update(void *pvParameters)
 			{
 				if((mode != PROGRAMMING_SS)&&(mode != DEBUG)&&(mode != IDLE))
 				{
-					mode_update(ALARM);
+					ModeUpdate(ALARM);
 				}
 				
 				led_zone_0_err_on;
@@ -440,7 +439,7 @@ void _task_state_update(void *pvParameters)
 			{
 				if((mode != PROGRAMMING_SS)&&(mode != DEBUG)&&(mode != IDLE))
 				{
-					mode_update(NORMAL);
+					ModeUpdate(NORMAL);
 				}
 				if(local_mode == ALARM)
 				{

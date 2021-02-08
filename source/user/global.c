@@ -62,10 +62,10 @@ static const uint8_t Crc8Table[256] =
 };
 /*----------------------------------------------------------------------*/
 /*
-* name: mode_update
-* description : mode_update
+* name: ModeUpdate
+* description : ModeUpdate
 */
-void mode_update(DEVICE_MODE new_mode)
+void ModeUpdate(DEVICE_MODE new_mode)
 {
 	mode = new_mode;
 }

@@ -82,10 +82,6 @@ sector #3 16KB size, 48KB limit flash memory for user program
 #define relay_z1_err_off	(GPIOB->BSRR |=GPIO_BSRR_BR_6 )
 #define relay_z1_alrm_on	(GPIOB->BSRR |=GPIO_BSRR_BS_7 )
 #define relay_z1_alrm_off	(GPIOB->BSRR |=GPIO_BSRR_BR_7 )
- 
-/*serial*/
-#define service_rts_on		(GPIOB->BSRR |=GPIO_BSRR_BS_12)
-#define service_rts_off		(GPIOB->BSRR |=GPIO_BSRR_BR_12)
 
 /*RS 485*/
 #define rs485_rts_on		(GPIOC->BSRR |=GPIO_BSRR_BS_8)

@@ -1,7 +1,7 @@
 /******************************************************************************
 * File Name          : serial.c
 * Author             : Tatarchenko S.
-* Version            : v 1.0
+* Version            : v 1.1
 * Description        : serial port module for stm32
 *******************************************************************************/
 #include "serial.h"
@@ -76,8 +76,6 @@ static const char welcome_text[8][__STRLEN] =
 	{__WELCOME_BLOCK_7}
 };
 
-char address_string[MAX_VALUE_LENGHT] = {0};
-
 /*
 * name : terminal_print_txtblock
 * description : print text block from two-dimm array (STATIC only!!, lenght defined as __STRLEN)
@@ -98,7 +96,7 @@ uint8_t GetAddressFromBuf(char * buff)
 	
 	GetHwAdrState(&ADDRESS);
 	address_int = atoi(buff);
-	if(ADDRESS.byte == address_int)
+	if((ADDRESS.byte == address_int)&&(ADDRESS.byte != 0))
 	{
 		for(; address_lenght < message_lenght; address_lenght++)
 		{
@@ -107,9 +105,6 @@ uint8_t GetAddressFromBuf(char * buff)
 				break;
 			}
 		}
-		memset(address_string,0,address_lenght);
-		memcpy(address_string,buff,address_lenght);
-		
 		address_lenght++;
 		memcpy(temp,&buff[address_lenght],message_lenght);
 		memset(buff,0,COMMAND_BUF_SIZE);
@@ -246,12 +241,12 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 	char answer[COMMAND_BUF_SIZE] = {0};
 	if((command.command != C_PING)&&(command.command != C_EXIT)&&(command.command != C_SAVE))
 	{
-		sprintf(answer,"%s %s\r\n",address_string,buff);
+		sprintf(answer,"%d %s\r\n",ADDRESS.byte,buff);
 		mprintf(answer);
 	}
 	else
 	{
-		sprintf(answer,"%s ok %s\r\n",address_string,buff);
+		sprintf(answer,"%d ok %s\r\n",ADDRESS.byte,buff);
 		mprintf(answer);
 	}
 	switch(command.command)
@@ -485,6 +480,24 @@ void serial_print_config()
 
 void serial_print_mode()
 {
+	const int array_size = MAX_VALUE_LENGHT + 1;
+	char array[array_size];
+	/********************************************/
+	sprintf(array,"%d\r\n",MODE.bit.zone0_enable);
+	mprintf(array);
+	memset(array,0,array_size);
+	/********************************************/
+	sprintf(array,"%d\r\n",MODE.bit.zone1_enable);
+	mprintf(array);
+	memset(array,0,array_size);
+	/********************************************/
+	sprintf(array,"%d\r\n",MODE.bit.zone0_mode);
+	mprintf(array);
+	memset(array,0,array_size);
+	/********************************************/
+	sprintf(array,"%d\r\n",MODE.bit.zone1_mode);
+	mprintf(array);
+	memset(array,0,array_size);
 }
 
 void serial_print_welcome()

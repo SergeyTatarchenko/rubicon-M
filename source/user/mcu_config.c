@@ -123,14 +123,7 @@ void DMA2_stream6_reload(uint32_t memory_adress,int new_buf_size)
 	DMA2_Stream6->NDTR = new_buf_size;
 	DMA2_Stream6->CR |= DMA_SxCR_EN;
 }
-/*
- name: serial_send_array
-*  descriprion: template for serial port send array for io implementation
-*/
-void serial_send_array(const char *array,int size)
-{
-	
-}
+
 /*
 * name : mprintf
 * description : serial port write for terminal
