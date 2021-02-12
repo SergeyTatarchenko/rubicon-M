@@ -23,6 +23,7 @@ int main()
 	
 	BaseType_t _AllOk_;
 	SysClkUpd();
+	memset(&CONFIG,0,sizeof(CONFIG));
 	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
 	sys_init();
 	
@@ -33,6 +34,7 @@ int main()
 		__enable_irq ();
 		
 		NVIC_EnableIRQ (USART6_IRQn);
+		NVIC_EnableIRQ (TIM2_IRQn);
 		
 		/*RTOS start here*/
 		vTaskStartScheduler();
@@ -74,7 +76,7 @@ BaseType_t Init_()
 	
 	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
 									NULL, MEM_ALLOCATION.user_priority , NULL );
-	TaskCreation &= xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
+	TaskCreation = xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
 									NULL, MEM_ALLOCATION.user_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",MEM_ALLOCATION.stack_serial,
 									NULL, MEM_ALLOCATION.serial_priority , NULL );
@@ -125,9 +127,9 @@ void SysClkUpd( void )
     /* HCLK = SYSCLK / 1*/
     RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
       
-    /* PCLK2 = HCLK / 4*/
+    /* 60 Mhz on APB2*/
     RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
-    /* PCLK1 = HCLK / 4*/
+    /* 30 Mhz on APB1*/
     RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
     /* Configure the main PLL */
 

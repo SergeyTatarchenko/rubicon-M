@@ -23,7 +23,13 @@ void _task_service_serial(void *pvParameters);
 void _task_rubicon_thread(void *pvParameters);
 void _task_system_thread(void *pvParameters);
 /*----------------------------------------------------------------------*/
-DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration);
+
+DEVICE_STATE_TypeDef Zone1ClimbThread(CONFIG_TypeDef* configuration);
+DEVICE_STATE_TypeDef Zone2ClimbThread(CONFIG_TypeDef* configuration);
+
+DEVICE_STATE_TypeDef Zone1CutThread(CONFIG_TypeDef* configuration);
+DEVICE_STATE_TypeDef Zone2CutThread(CONFIG_TypeDef* configuration);
+
 
 void serial_data_proc( char byte );
 void def_data_proc   ( char byte );

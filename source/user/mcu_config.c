@@ -100,6 +100,11 @@ void peripheral_config()
 	//USART6->CR3 |=  USART_CR3_DMAT;
 	
 	setup_serial_speed(&CONFIG,0);
+	/***********************************************************************/
+	/*TIM 2 config for 250 us tick*/
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+	TIM2->ARR = 15000;
+	TIM2->DIER |= TIM_DIER_UIE;
 }
 
 

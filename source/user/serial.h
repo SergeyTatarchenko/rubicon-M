@@ -20,9 +20,9 @@
 /*terminal commands version 0.1*/
 
 #define COMMAND_BUF_SIZE		32	/*32 byte */
-#define SERVICE_COMMBUFF_SIZE	2	/*two commands in queue*/
+#define SERVICE_COMMBUFF_SIZE	5	/*two commands in queue*/
 #define NUM_OF_COMMANDS			7
-#define NUM_OF_ARGUMENTS		11
+#define NUM_OF_ARGUMENTS		18
 #define MAX_VALUE_LENGHT		5
 
 /*enum of user commands*/
@@ -39,17 +39,24 @@ typedef enum {
 
 /*enum of user arguments*/
 typedef enum{
-	A_MODE,
+	A_MODE,		/* запрос текущего режима устройства */
 	A_ADDRESS,
 	A_STATE,
 	A_CONFIG,
 	A_BAUDRATE,
-	A_TRESHOLD1,
-	A_TRESHOLD2,
-	A_TIMEINT1,
-	A_TIMEINT2,
-	A_TRIGLIMIT1,
-	A_TRIGLIMIT2,
+	A_CTRESHOLD1,
+	A_CTRESHOLD2,
+	A_BTRESHOLD1,
+	A_BTRESHOLD2,
+	A_CTIMEINT1,
+	A_CTIMEINT2,
+	A_BTIMEINT1,
+	A_BTIMEINT2,
+	A_CTRIGLIMIT1,
+	A_CTRIGLIMIT2,
+	A_BTRIGLIMIT1,
+	A_BTRIGLIMIT2,
+	A_DEFCONFIG,
 	A_ERROR
 }ARGUMENTS;
 
@@ -72,6 +79,7 @@ uint8_t GetAddressFromBuf(char * buff);
 void terminal_print_txtblock( const char ( *buff )[__STRLEN], size_t strnum);
 void serial_print_state( void );
 void serial_print_address( void );
+void SetDefConfig( void );
 void serial_print_config( void );
 void serial_print_mode( void );
 void serial_print_welcome( void );

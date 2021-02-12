@@ -54,8 +54,6 @@
 #define __WELCOME_BLOCK_7 	__POSLINE
 #endif
 
-
-
 /*commands*/
 #define __EXIT	'e','x','i','t'
 #define __HELP	'h','e','l','p'
@@ -67,19 +65,24 @@
 
 
 /*arguments*/
-#define __MODE			'm','o','d','e'
-#define __ADDRESS		'a','d','d','r','e','s','s'
-#define __STATE			's','t','a','t','e'
-#define __CONFIG		'c','o','n','f','i','g'
-#define __BAUDRATE		'b','a','u','d','r','a','t','e'
-#define __TRESHOLD1		't','r','e','s','h','o','l','d','1'
-#define __TRESHOLD2		't','r','e','s','h','o','l','d','2'
-#define __TIMEINT1		't','i','m','e','i','n','t','1'
-#define __TIMEINT2		't','i','m','e','i','n','t','2'
-#define __TRIGLIMIT1	't','r','i','g','l','i','m','i','t','1'
-#define __TRIGLIMIT2	't','r','i','g','l','i','m','i','t','2'
-
-
+#define __MODE				'm','o','d','e'
+#define __ADDRESS			'a','d','d','r','e','s','s'
+#define __STATE				's','t','a','t','e'
+#define __CONFIG			'c','o','n','f','i','g'
+#define __BAUDRATE			'b','a','u','d','r','a','t','e'
+#define __CTRESHOLD1		'c','t','r','e','s','h','o','l','d','1'
+#define __CTRESHOLD2		'c','t','r','e','s','h','o','l','d','2'
+#define __BTRESHOLD1		'b','t','r','e','s','h','o','l','d','1'
+#define __BTRESHOLD2		'b','t','r','e','s','h','o','l','d','2'
+#define __CTIMEINT1			'c','t','i','m','e','i','n','t','1'
+#define __CTIMEINT2			'c','t','i','m','e','i','n','t','2'
+#define __BTIMEINT1			'b','t','i','m','e','i','n','t','1'
+#define __BTIMEINT2			'b','t','i','m','e','i','n','t','2'
+#define __CTRIGLIMIT1		'c','t','r','i','g','l','i','m','i','t','1'
+#define __CTRIGLIMIT2		'c','t','r','i','g','l','i','m','i','t','2'
+#define __BTRIGLIMIT1		'b','t','r','i','g','l','i','m','i','t','1'
+#define __BTRIGLIMIT2		'b','t','r','i','g','l','i','m','i','t','2'
+#define __DEFCONFIG			'd','e','f','c','o','n','f','i','g'
 
 
 #endif

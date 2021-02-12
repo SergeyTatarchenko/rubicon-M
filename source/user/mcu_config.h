@@ -103,6 +103,10 @@ sector #3 16KB size, 48KB limit flash memory for user program
 #define SERIAL_SPEED_57600	0xC35
 #define SERIAL_SPEED_115200	0xC35
 
+
+#define TIM2_START	TIM2->CR1 |=  TIM_CR1_CEN
+#define TIM2_STOP	TIM2->CR1 &= ~TIM_CR1_CEN
+
 /*----------------------------------------------------------------------*/
 void pin_config(void);
 void peripheral_config(void);

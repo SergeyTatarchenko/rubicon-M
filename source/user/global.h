@@ -28,6 +28,7 @@ typedef enum
 	S_ALARM_ZONE2,
 	S_ALARM_ALL,
 	S_ERROR_ALL
+	
 }DEVICE_STATE_TypeDef;
 
 /* union for manual ADDRESS configuration                               */
@@ -80,18 +81,45 @@ typedef union
 	struct
 	{
 	uint32_t serial_baudrate;                /*скорость RS-485          */
-	uint16_t zone_0_treshold;                /*порог срабатывания зоны 1*/
-	uint16_t zone_1_treshold;                /*порог срабатывания зоны 2*/
-	uint16_t zone_0_timeint;                 /*временной интервал зоны 1*/
-	uint16_t zone_1_timeint;                 /*временной интервал зоны 2*/
-	uint16_t zone_0_triglimit;               /*граничное значение 
-                                               превышений порога за 
-                                               временной интервал зоны 1*/
-	uint16_t zone_1_triglimit;               /*граничное значение 
-                                               превышений порога за 
-                                               временной интервал зоны 2*/
+
+	uint16_t zone_0_climb_treshold;          /*порог срабатывания зоны 1
+                                               по перелазу*/
+	uint16_t zone_1_climb_treshold;          /*порог срабатывания зоны 2
+                                               по перелазу*/
+	uint16_t zone_0_cut_treshold;            /*порог срабатывания зоны 1
+                                               по прорезанию*/
+	uint16_t zone_1_cut_treshold;            /*порог срабатывания зоны 2
+                                               по прорезанию*/
+
+	uint16_t zone_0_climb_timeint;           /*временной интервал зоны 1
+                                               по перелазу*/
+	uint16_t zone_1_climb_timeint;           /*временной интервал зоны 2
+                                               по перелазу*/
+	uint16_t zone_0_cut_timeint;             /*временной интервал зоны 1
+                                               по прорезанию*/
+	uint16_t zone_1_cut_timeint;             /*временной интервал зоны 2
+                                               по прорезанию*/
+
+	uint16_t zone_0_climb_triglimit;         /*граничное значение 
+                                               превышений порога по 
+                                               перелазу за временной 
+                                               интервал зоны 1*/
+	uint16_t zone_1_climb_triglimit;         /*граничное значение 
+                                               превышений порога по 
+                                               перелазу за временной 
+                                               интервал зоны 1*/
+	uint16_t zone_0_cut_triglimit;           /*граничное значение 
+                                               превышений порога по 
+                                               прорезанию за временной 
+                                               интервал зоны 1*/
+	uint16_t zone_1_cut_triglimit;           /*граничное значение 
+                                               превышений порога по 
+                                               прорезанию за временной 
+                                               интервал зоны 1*/
+
 	}data;
-	uint32_t array[4];                                /* блок 16 байт   */
+	uint32_t array[7];                       /* блок 28 байт   */
+	
 }CONFIG_TypeDef;
 
 /* struct for adc values from zone amplifiers                           */

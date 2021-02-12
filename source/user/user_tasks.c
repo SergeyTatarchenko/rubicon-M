@@ -10,12 +10,18 @@
 /*----------------------------------------------------------------------*/
 
 /*value from CONFIG struct converted from mV*/
-static uint16_t zone_0_treshold = 0;
-static uint16_t zone_1_treshold = 0;
+
+static uint16_t Zone0ClimbTreshold = 0;
+static uint16_t Zone1ClimbTreshold = 0;
+static uint16_t Zone0CutTreshold   = 0;
+static uint16_t Zone1CutTreshold   = 0;
 
 /*value from CONFIG struct converted from s*/
-static uint32_t zone_0_timeint = 0;
-static uint32_t zone_1_timeint = 0;
+
+static uint32_t Zone0ClimbTimeint = 0;
+static uint32_t Zone1ClimbTimeint = 0;
+static uint32_t Zone0CutTimeint = 0;
+static uint32_t Zone1CutTimeint = 0;
 
 /*software timers instance and id*/
 const unsigned portBASE_TYPE zone_0_timerID = 1;
@@ -62,6 +68,71 @@ void USART6_IRQHandler()
 			default:
 				break;
 		}
+	}
+}
+
+/* name: TIM2_IRQHandler
+*  descriprion: частота дискретизации сигнала по прорезанию на кабеле: 250 мкс;
+   частота дискретизации сигнала по перелазу на кабеле: 1 мс;
+*/
+
+void TIM2_IRQHandler()
+{
+	static uint32_t counter = 0;
+	static portBASE_TYPE xTaskWoken = pdFALSE;
+	int zone_trigger = 0;
+	DEVICE_STATE_TypeDef ret_value = S_NORMAL;
+	DEVICE_STATE_TypeDef local_state = S_NORMAL;
+	
+	if(TIM2->SR&TIM_SR_UIF)
+	{
+		TIM2->SR &= ~TIM_SR_UIF;
+	}
+
+	/*триггер прорезания зоны 1*/
+	if(MODE.bit.zone0_enable)
+	{
+		ret_value = Zone1CutThread(&CONFIG);
+		/*триггер перелаза зоны 1*/
+		if((counter %4 == 0)&&(ret_value == S_NORMAL))
+		{
+			ret_value = Zone1ClimbThread(&CONFIG);
+		}
+		if(ret_value != S_NORMAL)
+		{
+			local_state = S_ALARM_ZONE1;
+			zone_trigger ++;
+		}
+	}
+	/*триггер прорезания зоны 2*/
+	if(MODE.bit.zone1_enable)
+	{
+		ret_value = Zone2CutThread(&CONFIG);
+		/*триггер перелаза зоны 1*/
+		if((counter %4 == 0)&&(ret_value == S_NORMAL))
+		{
+			ret_value = Zone2ClimbThread(&CONFIG);
+		}
+		if(ret_value != S_NORMAL)
+		{
+			local_state = S_ALARM_ZONE2;
+			zone_trigger ++;
+		}
+	}
+	if(zone_trigger > 1)
+	{
+		local_state = S_ALARM_ALL;
+	}
+	
+	if(global_state != local_state)
+	{
+		global_state = local_state;
+		/* переключение задачи на _task_system_thread при смене состояния */
+		xSemaphoreGiveFromISR(xSemph_state_UPDATE,&xTaskWoken);
+	}
+	if(xTaskWoken == pdTRUE)
+	{
+		taskYIELD();
 	}
 }
 
@@ -373,16 +444,21 @@ void _task_state_update(void *pvParameters)
 	static int tick = 0;
 	static const int tick_overload = 99999;
 	
-	static DEVICE_STATE_TypeDef local_state = S_NORMAL;
 	static DEVICE_MODE local_mode = NORMAL;
 	
 	/* convert flash treshold value from mV to int*/
-	zone_0_treshold = adc_covert_from_mv(CONFIG.data.zone_0_treshold);
-	zone_1_treshold = adc_covert_from_mv(CONFIG.data.zone_1_treshold);
+	Zone0ClimbTreshold = adc_covert_from_mv(CONFIG.data.zone_0_climb_treshold);
+	Zone1ClimbTreshold = adc_covert_from_mv(CONFIG.data.zone_1_climb_treshold);
+	Zone0CutTreshold   = adc_covert_from_mv(CONFIG.data.zone_0_cut_treshold);
+	Zone1CutTreshold   = adc_covert_from_mv(CONFIG.data.zone_1_cut_treshold);
 	
-	/*convert flash timeint value from S to mS*/
-	zone_0_timeint = CONFIG.data.zone_0_timeint * 1000;
-	zone_1_timeint = CONFIG.data.zone_1_timeint * 1000;
+	/*climb trigger tick every 1 ms*/
+	Zone0ClimbTimeint = CONFIG.data.zone_0_climb_timeint * 1000;
+	Zone1ClimbTimeint = CONFIG.data.zone_1_climb_timeint * 1000;
+	
+	/*cut trigger tick every 250 us*/
+	Zone0CutTimeint   = CONFIG.data.zone_0_cut_timeint * 1000 * 4;
+	Zone1CutTimeint   = CONFIG.data.zone_1_cut_timeint * 1000 * 4;
 	
 	relay_z0_err_on;
 	relay_z1_err_on;
@@ -399,17 +475,13 @@ void _task_state_update(void *pvParameters)
 		{
 			tick++;
 		}
-		if((mode == NORMAL)||(mode == DEBUG)||(mode == PROGRAMMING_SS))
+		if((mode == NORMAL)||(mode == DEBUG))
 		{
-			/*В нормальном режиме работы вызов функции каждую ~1мс*/
-			local_state = rubicon_zone_thread(&CONFIG);
-			
-			/* переключение задачи на _task_system_thread при смене состояния */
-			if(local_state != global_state )
-			{
-				global_state = local_state;
-				xSemaphoreGive(xSemph_state_UPDATE);
-			}
+			TIM2_START;
+		}
+		else
+		{
+			TIM2_STOP;
 		}
 		if(tick%STATE_UPDATE_RATE == 0)
 		{
@@ -457,95 +529,174 @@ void _task_state_update(void *pvParameters)
 	}
 }
 
-/* name: rubicon_zone_thread
-*  descriprion: main routine thread, adc channel digitization return enum of states
-*/
-DEVICE_STATE_TypeDef rubicon_zone_thread(CONFIG_TypeDef* configuration)
+/*----------------------------------------------------------------*/
+
+DEVICE_STATE_TypeDef Zone1ClimbThread(CONFIG_TypeDef* configuration)
 {
 	/*counter_down - счетчик от timeint до 0,counter_up - счетчик от 0 до triglimit */
-	static int zone_0_trigger = 0,zone_0_counter_up = 0,zone_0_counter_down = 0;
-	static int zone_1_trigger = 0,zone_1_counter_up = 0,zone_1_counter_down = 0;
-	
-	uint8_t updater = 0;
+	static int trigger = 0,cnt_up = 0,cnt_down = 0;
 	DEVICE_STATE_TypeDef state = S_NORMAL;
-	
-	/*zone 0*/
-	if(MODE.bit.zone0_enable == 1)
+	/*trigger SET*/
+	if((trigger == 0)&&(ZONE_0_F > Zone0ClimbTreshold))
 	{
-		/*добавить проверку кабеля на обрыв, опрос сигнала кабеля только при отсутствии обрыва */
-		/*trigger SET*/
-		if((zone_0_trigger == 0)&&(ZONE_0_F > zone_0_treshold))
+		trigger = 1;
+		cnt_down = Zone0ClimbTimeint;
+	}
+	/* начало дискретизации сигнала в течение заданного интервала после первого превышения порога*/
+	if(trigger == 1)
+	{
+		if(cnt_down > 0)
 		{
-			zone_0_trigger = 1;
-			zone_0_counter_down = zone_0_timeint;
+			cnt_down--;
 		}
-		/* начало дискретизации сигнала в течение заданного интервала после первого превышения порога*/
-		if(zone_0_trigger == 1)
+		/*trigger RESET*/
+		else
 		{
-			if(zone_0_counter_down > 0)
-			{
-				zone_0_counter_down--;
-			}
-			/*trigger RESET*/
-			else
-			{
-				zone_0_trigger = 0;
-				zone_0_counter_up = 0;
-			}
-			if(ZONE_0_F > zone_0_treshold)
-			{
-				zone_0_counter_up++;
-			}
-			/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
-			if((zone_0_counter_up>=configuration->data.zone_0_triglimit )&&(zone_0_counter_down > 0))
-			{
-				zone_0_counter_down = 0;
-				zone_0_counter_up = 0;
-				state = S_ALARM_ZONE1;
-				updater++;
-			}
+			trigger = 0;
+			cnt_up = 0;
+		}
+		if(ZONE_0_F > Zone0ClimbTreshold)
+		{
+			cnt_up++;
+		}
+		/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
+		if((cnt_up>=configuration->data.zone_0_climb_triglimit )
+			&&(cnt_down > 0))
+		{
+			trigger = 0;
+			cnt_down = 0;
+			cnt_up = 0;
+			state = S_ALARM_ZONE1;
 		}
 	}
-	/*zone 1*/
-	if(MODE.bit.zone1_enable == 1)
+	return state;
+}
+
+/*----------------------------------------------------------------*/
+
+DEVICE_STATE_TypeDef Zone2ClimbThread(CONFIG_TypeDef* configuration)
+{
+	/*counter_down - счетчик от timeint до 0,counter_up - счетчик от 0 до triglimit */
+	static int trigger = 0,cnt_up = 0,cnt_down = 0;
+	DEVICE_STATE_TypeDef state = S_NORMAL;
+	/*trigger SET*/
+	if((trigger == 0)&&(ZONE_1_F > Zone1ClimbTreshold))
 	{
-		/*добавить проверку кабеля на обрыв, опрос сигнала кабеля только при отсутствии обрыва */
-		/*trigger SET*/
-		if((zone_1_trigger == 0)&&(ZONE_1_F > zone_1_treshold))
+		trigger = 1;
+		cnt_down = Zone1ClimbTimeint;
+	}
+	/* начало дискретизации сигнала в течение заданного интервала после первого превышения порога*/
+	if(trigger == 1)
+	{
+		if(cnt_down > 0)
 		{
-			zone_1_trigger = 1;
-			zone_1_counter_down = zone_1_timeint;
+			cnt_down--;
 		}
-		/* начало дискретизации сигнала в течение заданного интервала после первого превышения порога*/
-		if(zone_1_trigger == 1)
+		/*trigger RESET*/
+		else
 		{
-			if(zone_1_counter_down > 0)
-			{
-				zone_1_counter_down--;
-			}
-			/*trigger RESET*/
-			else
-			{
-				zone_1_trigger = 0;
-				zone_1_counter_up = 0;
-			}
-			if(ZONE_1_F > zone_1_treshold)
-			{
-				zone_1_counter_up++;
-			}
-			/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
-			if((zone_1_counter_up>=configuration->data.zone_1_triglimit )&&(zone_1_counter_down > 0))
-			{
-				zone_1_counter_down = 0;
-				zone_1_counter_up = 0;
-				state = S_ALARM_ZONE2;
-				updater++;
-			}
+			trigger = 0;
+			cnt_up = 0;
+		}
+		if(ZONE_1_F > Zone1ClimbTreshold)
+		{
+			cnt_up++;
+		}
+		/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
+		if((cnt_up>=configuration->data.zone_1_climb_triglimit )
+			&&(cnt_down > 0))
+		{
+			trigger = 0;
+			cnt_down = 0;
+			cnt_up = 0;
+			state = S_ALARM_ZONE2;
 		}
 	}
-	if(updater > 1)
+	return state;
+}
+
+/*----------------------------------------------------------------*/
+
+DEVICE_STATE_TypeDef Zone1CutThread(CONFIG_TypeDef* configuration)
+{
+	/*counter_down - счетчик от timeint до 0,counter_up - счетчик от 0 до triglimit */
+	static int trigger = 0,cnt_up = 0,cnt_down = 0;
+	DEVICE_STATE_TypeDef state = S_NORMAL;
+	/*trigger SET*/
+	if((trigger == 0)&&(ZONE_0_F > Zone0CutTreshold))
 	{
-		state = S_ALARM_ALL;
+		trigger = 1;
+		cnt_down = Zone0CutTimeint;
+	}
+	/* начало дискретизации сигнала в течение заданного интервала после первого превышения порога*/
+	if(trigger == 1)
+	{
+		if(cnt_down > 0)
+		{
+			cnt_down--;
+		}
+		/*trigger RESET*/
+		else
+		{
+			trigger = 0;
+			cnt_up = 0;
+		}
+		if(ZONE_0_F > Zone0CutTreshold)
+		{
+			cnt_up++;
+		}
+		/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
+		if((cnt_up>=configuration->data.zone_0_cut_triglimit )
+			&&(cnt_down > 0))
+		{
+			trigger = 0;
+			cnt_down = 0;
+			cnt_up = 0;
+			state = S_ALARM_ZONE1;
+		}
+	}
+	return state;
+}
+
+/*----------------------------------------------------------------*/
+
+DEVICE_STATE_TypeDef Zone2CutThread(CONFIG_TypeDef* configuration)
+{
+	/*counter_down - счетчик от timeint до 0,counter_up - счетчик от 0 до triglimit */
+	static int trigger = 0,cnt_up = 0,cnt_down = 0;
+	DEVICE_STATE_TypeDef state = S_NORMAL;
+	/*trigger SET*/
+	if((trigger == 0)&&(ZONE_1_F > Zone1CutTreshold))
+	{
+		trigger = 1;
+		cnt_down = Zone1CutTimeint;
+	}
+	/* начало дискретизации сигнала в течение заданного интервала после первого превышения порога*/
+	if(trigger == 1)
+	{
+		if(cnt_down > 0)
+		{
+			cnt_down--;
+		}
+		/*trigger RESET*/
+		else
+		{
+			trigger = 0;
+			cnt_up = 0;
+		}
+		if(ZONE_1_F > Zone1CutTreshold)
+		{
+			cnt_up++;
+		}
+		/*накопленное значение интеграла превышает заданное в пределе интервала (сработка зоны X)*/
+		if((cnt_up>=configuration->data.zone_1_cut_triglimit )
+			&&(cnt_down > 0))
+		{
+			trigger = 0;
+			cnt_down = 0;
+			cnt_up = 0;
+			state = S_ALARM_ZONE2;
+		}
 	}
 	return state;
 }
