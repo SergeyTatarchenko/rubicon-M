@@ -464,6 +464,7 @@ void _task_state_update(void *pvParameters)
 	relay_z1_err_on;
 	relay_z0_alrm_on;
 	relay_z1_alrm_on;
+	vTaskDelay(100);
 	
 	while(TRUE)
 	{

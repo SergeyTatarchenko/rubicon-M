@@ -560,7 +560,7 @@ void serial_print_config()
 	sprintf(array,"%d\r\n",CONFIG.data.zone_1_climb_timeint);
 	mprintf(array);
 	memset(array,0,array_size);
-	sprintf(array,"%d\r\n",CONFIG.data.zone_0_cut_timeint);
+	sprintf(array,"%d\r\n",CONFIG.data.zone_1_cut_timeint);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
@@ -573,7 +573,7 @@ void serial_print_config()
 	sprintf(array,"%d\r\n",CONFIG.data.zone_1_climb_triglimit);
 	mprintf(array);
 	memset(array,0,array_size);
-	sprintf(array,"%d\r\n",CONFIG.data.zone_0_cut_triglimit);
+	sprintf(array,"%d\r\n",CONFIG.data.zone_1_cut_triglimit);
 	mprintf(array);
 	memset(array,0,array_size);
 	/********************************************/
@@ -586,7 +586,7 @@ void serial_print_config()
 	sprintf(array,"%d\r\n",CONFIG.data.zone_1_climb_treshold);
 	mprintf(array);
 	memset(array,0,array_size);
-	sprintf(array,"%d\r\n",CONFIG.data.zone_0_cut_treshold);
+	sprintf(array,"%d\r\n",CONFIG.data.zone_1_cut_treshold);
 	mprintf(array);
 	memset(array,0,array_size);
 }
