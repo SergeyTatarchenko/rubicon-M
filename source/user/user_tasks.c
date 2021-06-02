@@ -30,6 +30,9 @@ const unsigned portBASE_TYPE zone_1_timerID = 2;
 TimerHandle_t zone_0_timer;
 TimerHandle_t zone_1_timer;
 
+static uint8_t zone_0_tigger = FALSE;
+static uint8_t zone_1_tigger = FALSE;
+
 /* 
 * name: USART6_IRQHandler
 * descriprion: interrupt handler for RS 485 port communication
@@ -90,7 +93,7 @@ void TIM2_IRQHandler()
 	}
 
 	/*триггер прорезания зоны 1*/
-	if(MODE.bit.zone0_enable)
+	if(MODE.bit.zone0_enable && zone_0_tigger)
 	{
 		ret_value = Zone1CutThread(&CONFIG);
 		/*триггер перелаза зоны 1*/
@@ -101,11 +104,12 @@ void TIM2_IRQHandler()
 		if(ret_value != S_NORMAL)
 		{
 			local_state = S_ALARM_ZONE1;
+			zone_0_tigger = FALSE;
 			zone_trigger ++;
 		}
 	}
 	/*триггер прорезания зоны 2*/
-	if(MODE.bit.zone1_enable)
+	if(MODE.bit.zone1_enable && zone_1_tigger)
 	{
 		ret_value = Zone2CutThread(&CONFIG);
 		/*триггер перелаза зоны 1*/
@@ -116,6 +120,7 @@ void TIM2_IRQHandler()
 		if(ret_value != S_NORMAL)
 		{
 			local_state = S_ALARM_ZONE2;
+			zone_1_tigger = FALSE;
 			zone_trigger ++;
 		}
 	}
@@ -357,6 +362,7 @@ void zone_0_timer_handler (TimerHandle_t xTimer)
 	{
 		led_zone_0_alrm_off;
 		relay_z0_alrm_on;
+		zone_0_tigger = TRUE;
 	}
 }
 
@@ -369,6 +375,7 @@ void zone_1_timer_handler (TimerHandle_t xTimer)
 	{
 		led_zone_1_alrm_off;
 		relay_z1_alrm_on;
+		zone_1_tigger = TRUE;
 	}
 }
 
@@ -464,6 +471,10 @@ void _task_state_update(void *pvParameters)
 	relay_z1_err_on;
 	relay_z0_alrm_on;
 	relay_z1_alrm_on;
+	
+	zone_0_tigger = TRUE;
+	zone_1_tigger = TRUE;
+	
 	vTaskDelay(100);
 	
 	while(TRUE)
