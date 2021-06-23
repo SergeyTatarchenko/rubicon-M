@@ -2,7 +2,7 @@
 * File Name          : user_tasks.c
 * Author             : Tatarchenko S.
 * Version            : v 1.0
-* Description        : RTOS high level routines
+* Description        : RTOS routines
 *************************************************************************/
 
 /*----------------------------------------------------------------------*/
@@ -20,8 +20,8 @@ static uint16_t Zone1CutTreshold   = 0;
 
 static uint32_t Zone0ClimbTimeint = 0;
 static uint32_t Zone1ClimbTimeint = 0;
-static uint32_t Zone0CutTimeint = 0;
-static uint32_t Zone1CutTimeint = 0;
+static uint32_t Zone0CutTimeint   = 0;
+static uint32_t Zone1CutTimeint   = 0;
 
 /*software timers instance and id*/
 const unsigned portBASE_TYPE zone_0_timerID = 1;
@@ -59,15 +59,14 @@ void USART6_IRQHandler()
 				/*777 data proc*/
 				break;
 			case PROGRAMMING_SS:
-				serial_data_proc(byte);
+				SerialDataProc(byte);
 				break;
 			case DEBUG:
-				serial_data_proc(byte);
+				SerialDataProc(byte);
 				break;
 			case IDLE:
-				serial_data_proc(byte);
+				SerialDataProc(byte);
 				break;
-			
 			default:
 				break;
 		}
@@ -82,6 +81,7 @@ void USART6_IRQHandler()
 void TIM2_IRQHandler()
 {
 	static uint32_t counter = 0;
+	static const uint32_t overload = 3600000;
 	static portBASE_TYPE xTaskWoken = pdFALSE;
 	int zone_trigger = 0;
 	DEVICE_STATE_TypeDef ret_value = S_NORMAL;
@@ -91,10 +91,19 @@ void TIM2_IRQHandler()
 	{
 		TIM2->SR &= ~TIM_SR_UIF;
 	}
+	
+	if(counter == overload)
+	{
+		counter =0;
+	}
+	else
+	{
+		counter++;
+	}
 
-	/*триггер прорезания зоны 1*/
 	if(MODE.bit.zone0_enable && zone_0_tigger)
 	{
+		/*триггер прорезания зоны 1*/
 		ret_value = Zone1CutThread(&CONFIG);
 		/*триггер перелаза зоны 1*/
 		if((counter %4 == 0)&&(ret_value == S_NORMAL))
@@ -166,10 +175,10 @@ void ModeSwitcher( char byte )
 	}
 }
 
-/* name: def_data_proc
+/* name: DefDataProc
 *  descriprion: data proc in NORMAL and ALARM mode
 */
-void def_data_proc(char byte)
+void DefDataProc(char byte)
 {
 	//static int counter = 0;
 	//static char buffer[sizeof(RUBICON_CONTROL_MESSAGE_TypeDef)] = {0};
@@ -177,14 +186,14 @@ void def_data_proc(char byte)
 	
 }
 
-/* name: serial_data_proc
+/* name: SerialDataProc
 *  descriprion: data proc in PROGRAMMING,IDLE and DEBUG mode 
 */
-void serial_data_proc(char byte)
+void SerialDataProc(char byte)
 {
 	static int counter = 0;
 	static char buffer[COMMAND_BUF_SIZE] = {0};
-	if(byte != '\r')
+	if(byte != SWITCH_BYTE)
 	{
 		/*input buffer oferflow error*/
 		if(counter == COMMAND_BUF_SIZE)
@@ -199,7 +208,7 @@ void serial_data_proc(char byte)
 			counter++;
 		}
 	}
-	else if(byte == '\r')
+	else if(byte == SWITCH_BYTE)
 	{
 		/*mode switching*/
 		switch(mode)

@@ -433,8 +433,7 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 				case A_BAUDRATE:
 					if(command.value != 0)
 					{
-						//CONFIG.data.serial_baudrate = command.value;
-						/*добавить функцию обновления скорости порта*/
+						SetupSerialSpeed(&CONFIG,command.value);
 						mprintf("ok\r\n");
 					}
 					else

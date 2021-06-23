@@ -110,7 +110,7 @@ sector #3 16KB size, 48KB limit flash memory for user program
 /*----------------------------------------------------------------------*/
 void pin_config(void);
 void peripheral_config(void);
-void sys_init(void);
+void SysInit(void);
 
 void flash_data_write(const uint32_t address,int sector, const uint32_t *data,int size);
 void flash_data_read(const uint32_t address, uint32_t *data,int size);

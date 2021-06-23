@@ -18,12 +18,11 @@ static MEM_ALLOCATION_TypeDef MEM_ALLOCATION;
 */
 int main()
 {
-	
 	BaseType_t _AllOk_;
 	SysClkUpd();
 	memset(&CONFIG,0,sizeof(CONFIG));
 	flash_data_read(CONFIG_FLASH_ADDRESS,(uint32_t*)(&CONFIG),sizeof(CONFIG));
-	sys_init();
+	SysInit();
 	
 	_AllOk_ = Init_();
 	if(_AllOk_ == pdTRUE)

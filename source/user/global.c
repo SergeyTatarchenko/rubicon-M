@@ -116,7 +116,7 @@ void GetHwModeState( MODE_TypeDef *state )
 * setup serial speed,return TRUE if success, return FALSE if input value incorrect
 * setup speed 19200 as default
 */
-uint8_t setup_serial_speed( CONFIG_TypeDef* config, uint32_t speed )
+uint8_t SetupSerialSpeed( CONFIG_TypeDef* config, uint32_t speed )
 {
 	uint8_t state = TRUE;
 	USART6->CR1 &= ~USART_CR1_UE;

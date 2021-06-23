@@ -10,7 +10,7 @@
 /*
 * low level microchip init function
 */
-void sys_init()
+void SysInit()
 {
 	pin_config();
 	
@@ -99,7 +99,7 @@ void peripheral_config()
 	USART6->CR2 &= ~USART_CR2_STOP;
 	//USART6->CR3 |=  USART_CR3_DMAT;
 	
-	setup_serial_speed(&CONFIG,0);
+	SetupSerialSpeed(&CONFIG,0);
 	/***********************************************************************/
 	/*TIM 2 config for 250 us tick*/
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
