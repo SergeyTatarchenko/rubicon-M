@@ -155,7 +155,7 @@ int num_of_symbols = 0;
 	}
 	/*copy command word to buffer*/
 	for(int i = 0; i < COMMAND_BUF_SIZE; i++)
-	{
+	 {
 		if((buff[i] == 0) ||(buff[i] == ' '))
 		{
 			break;
@@ -219,23 +219,53 @@ int num_of_symbols = 0;
 				out.argument = A_ERROR;
 			}
 		}
-		/*copy command argument 2*/
-		if((counter < COMMAND_BUF_SIZE) && (buff[counter]!= 0))
+		/*copy command values*/
+		if(out.command == C_SET && out.argument == A_CONFIG)
 		{
-			counter++;
-			for(int i = 0; counter < COMMAND_BUF_SIZE; i++)
+			/*костыль для общего конфига*/
+			for(int j = 0; j < 13; j++)
 			{
-				if((buff[counter] == ' ')||(buff[counter] == 0))
+				if((counter < COMMAND_BUF_SIZE) && (buff[counter]!= 0))
 				{
-					break;
-				}
-				else
-				{
-					arg_2[i] = buff[counter];
 					counter++;
+					for(int i = 0; counter < COMMAND_BUF_SIZE; i++)
+					{
+						if((buff[counter] == ' ')||(buff[counter] == 0))
+						{
+							break;
+						}
+						else
+						{
+							arg_2[i] = buff[counter];
+							counter++;
+						}
+					}
+					out.values[j] = atoi(arg_2);
+					out.num_of_values++;
+					memset(arg_2,0,sizeof(arg_2));
 				}
 			}
-			out.value = atoi(arg_2);
+		}
+		else
+		{
+			if((counter < COMMAND_BUF_SIZE) && (buff[counter]!= 0))
+			{
+				counter++;
+				for(int i = 0; counter < COMMAND_BUF_SIZE; i++)
+				{
+					if((buff[counter] == ' ')||(buff[counter] == 0))
+					{
+						break;
+					}
+					else
+					{
+						arg_2[i] = buff[counter];
+						counter++;
+					}
+				}
+				out.values[0] = atoi(arg_2);
+				out.num_of_values = 1;
+			}
 		}
 	}
 	return out;
@@ -246,6 +276,7 @@ int num_of_symbols = 0;
 void serial_command_executor (TCmdTypeDef command, const char *buff)
 {
 	char answer[COMMAND_BUF_SIZE] = {0};
+	uint8_t state = FALSE;
 	if((command.command != C_PING)&&(command.command != C_EXIT)&&(command.command != C_SAVE))
 	{
 		sprintf(answer,"%d %s\r\n",ADDRESS.byte,buff);
@@ -299,9 +330,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 			switch(command.argument)
 			{
   				case A_CTIMEINT1:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_0_climb_timeint = command.value;
+						CONFIG.data.zone_0_climb_timeint = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -310,9 +341,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_BTIMEINT1:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_0_cut_timeint = command.value;
+						CONFIG.data.zone_0_cut_timeint = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -321,9 +352,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_CTIMEINT2:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_1_climb_timeint = command.value;
+						CONFIG.data.zone_1_climb_timeint = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -332,9 +363,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_BTIMEINT2:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_1_cut_timeint = command.value;
+						CONFIG.data.zone_1_cut_timeint = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -343,9 +374,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_CTRESHOLD1:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_0_climb_treshold = command.value;
+						CONFIG.data.zone_0_climb_treshold = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -354,9 +385,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_BTRESHOLD1:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_0_cut_treshold = command.value;
+						CONFIG.data.zone_0_cut_treshold = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -365,9 +396,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_CTRESHOLD2:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_1_climb_treshold = command.value;
+						CONFIG.data.zone_1_climb_treshold = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -376,9 +407,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_BTRESHOLD2:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_1_cut_treshold = command.value;
+						CONFIG.data.zone_1_cut_treshold = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -387,9 +418,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_CTRIGLIMIT1:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_0_climb_triglimit = command.value;
+						CONFIG.data.zone_0_climb_triglimit = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -398,9 +429,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_BTRIGLIMIT1:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_0_cut_triglimit = command.value;
+						CONFIG.data.zone_0_cut_triglimit = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -409,9 +440,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_CTRIGLIMIT2:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_1_climb_triglimit = command.value;
+						CONFIG.data.zone_1_climb_triglimit = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -420,9 +451,9 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_BTRIGLIMIT2:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						CONFIG.data.zone_1_cut_triglimit = command.value;
+						CONFIG.data.zone_1_cut_triglimit = command.values[0];
 						mprintf("ok\r\n");
 					}
 					else
@@ -431,10 +462,27 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					}
 					break;
 				case A_BAUDRATE:
-					if(command.value != 0)
+					if(command.values[0] != 0)
 					{
-						SetupSerialSpeed(&CONFIG,command.value);
-						mprintf("ok\r\n");
+						state = SetupSerialSpeed(&CONFIG,command.values[0]);
+						if(state == TRUE)
+						{
+							mprintf("ok\r\n");
+						}
+						else
+						{
+							mprintf("error\r\n");
+						}
+					}
+					else
+					{
+						mprintf("error\r\n");
+					}
+					break;
+				case A_CONFIG:
+					if(command.values[0] != 0)
+					{
+						SetConfig(command.values);
 					}
 					else
 					{
@@ -443,7 +491,6 @@ void serial_command_executor (TCmdTypeDef command, const char *buff)
 					break;
 				case A_DEFCONFIG:
 					SetDefConfig();
-					mprintf("ok\r\n");
 					break;
 				default:
 					mprintf("error\r\n");
@@ -480,6 +527,33 @@ void __attribute__((weak)) serial_send_array(const char *array,int size)
 {
 }
 
+void SetConfig( int *arr )
+{
+	for(int i = 0; i < 13; i++)
+	{
+		if(arr[i] == 0)
+		{
+			mprintf("error\r\n");
+			return;
+		}
+	}
+	CONFIG.data.serial_baudrate = arr[0];
+	CONFIG.data.zone_0_climb_timeint = arr[1];
+	CONFIG.data.zone_0_cut_timeint   = arr[2];
+	CONFIG.data.zone_1_climb_timeint = arr[3];
+	CONFIG.data.zone_1_cut_timeint   = arr[4];
+	
+	CONFIG.data.zone_0_climb_triglimit = arr[5];
+	CONFIG.data.zone_0_cut_triglimit   = arr[6];
+	CONFIG.data.zone_1_climb_triglimit = arr[7];
+	CONFIG.data.zone_1_cut_triglimit   = arr[8];
+	
+	CONFIG.data.zone_0_climb_treshold = arr[9];
+	CONFIG.data.zone_0_cut_treshold   = arr[10];
+	CONFIG.data.zone_1_climb_treshold = arr[11];
+	CONFIG.data.zone_1_cut_treshold   = arr[12];
+	mprintf("ok\r\n");
+}
 
 /**********************
 LOCAL PRINT FUNCTIONS

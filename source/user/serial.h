@@ -19,14 +19,15 @@
 
 /*terminal commands version 0.1*/
 
-#define COMMAND_BUF_SIZE		32	/*32 byte */
-#define SERVICE_COMMBUFF_SIZE	5	/*two commands in queue*/
+#define COMMAND_BUF_SIZE		128	/*32 byte */
+#define SERVICE_COMMBUFF_SIZE	5	/*5 commands in queue*/
 #define NUM_OF_COMMANDS			7
 #define NUM_OF_ARGUMENTS		18
 #define MAX_VALUE_LENGHT		5
 
 /*enum of user commands*/
-typedef enum {
+typedef enum
+{
 	C_EXIT,
 	C_HELP,
 	C_SAVE,
@@ -38,7 +39,8 @@ typedef enum {
 }COMMANDS;
 
 /*enum of user arguments*/
-typedef enum{
+typedef enum
+{
 	A_MODE,		/* запрос текущего режима устройства */
 	A_ADDRESS,
 	A_STATE,
@@ -61,10 +63,13 @@ typedef enum{
 }ARGUMENTS;
 
 /*typedef output for user command for terminal */
-typedef struct {
+typedef struct
+{
 	COMMANDS command;
 	ARGUMENTS argument;
-	int value;
+	int values[13];
+	int num_of_values;
+	
 }TCmdTypeDef;
 
 /*---------------------local function prototypes------------------------------*/
@@ -80,6 +85,7 @@ void terminal_print_txtblock( const char ( *buff )[__STRLEN], size_t strnum);
 void serial_print_state( void );
 void serial_print_address( void );
 void SetDefConfig( void );
+void SetConfig( int *arr );
 void serial_print_config( void );
 void serial_print_mode( void );
 void serial_print_welcome( void );

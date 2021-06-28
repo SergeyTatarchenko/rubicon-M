@@ -97,11 +97,11 @@ sector #3 16KB size, 48KB limit flash memory for user program
 
 /*usart baudrate table for 60 MHz bus clock*/
 
-#define SERIAL_SPEED_9600	0xC35
+#define SERIAL_SPEED_9600	0x186A
 #define SERIAL_SPEED_19200	0xC35
-#define SERIAL_SPEED_38400	0xC35
-#define SERIAL_SPEED_57600	0xC35
-#define SERIAL_SPEED_115200	0xC35
+#define SERIAL_SPEED_38400	0x61B
+#define SERIAL_SPEED_57600	0x412
+#define SERIAL_SPEED_115200	0x209
 
 
 #define TIM2_START	TIM2->CR1 |=  TIM_CR1_CEN
