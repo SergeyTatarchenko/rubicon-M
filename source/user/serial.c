@@ -223,7 +223,7 @@ int num_of_symbols = 0;
 		if(out.command == C_SET && out.argument == A_CONFIG)
 		{
 			/*костыль для общего конфига*/
-			for(int j = 0; j < 13; j++)
+			for(int j = 0; j < 12; j++)
 			{
 				if((counter < COMMAND_BUF_SIZE) && (buff[counter]!= 0))
 				{
@@ -529,7 +529,7 @@ void __attribute__((weak)) serial_send_array(const char *array,int size)
 
 void SetConfig( int *arr )
 {
-	for(int i = 0; i < 13; i++)
+	for(int i = 0; i < 12; i++)
 	{
 		if(arr[i] == 0)
 		{
@@ -537,21 +537,21 @@ void SetConfig( int *arr )
 			return;
 		}
 	}
-	CONFIG.data.serial_baudrate = arr[0];
-	CONFIG.data.zone_0_climb_timeint = arr[1];
-	CONFIG.data.zone_0_cut_timeint   = arr[2];
-	CONFIG.data.zone_1_climb_timeint = arr[3];
-	CONFIG.data.zone_1_cut_timeint   = arr[4];
+	//CONFIG.data.serial_baudrate = arr[0];
+	CONFIG.data.zone_0_climb_timeint = arr[0];
+	CONFIG.data.zone_0_cut_timeint   = arr[1];
+	CONFIG.data.zone_1_climb_timeint = arr[2];
+	CONFIG.data.zone_1_cut_timeint   = arr[3];
 	
-	CONFIG.data.zone_0_climb_triglimit = arr[5];
-	CONFIG.data.zone_0_cut_triglimit   = arr[6];
-	CONFIG.data.zone_1_climb_triglimit = arr[7];
-	CONFIG.data.zone_1_cut_triglimit   = arr[8];
+	CONFIG.data.zone_0_climb_triglimit = arr[4];
+	CONFIG.data.zone_0_cut_triglimit   = arr[5];
+	CONFIG.data.zone_1_climb_triglimit = arr[6];
+	CONFIG.data.zone_1_cut_triglimit   = arr[7];
 	
-	CONFIG.data.zone_0_climb_treshold = arr[9];
-	CONFIG.data.zone_0_cut_treshold   = arr[10];
-	CONFIG.data.zone_1_climb_treshold = arr[11];
-	CONFIG.data.zone_1_cut_treshold   = arr[12];
+	CONFIG.data.zone_0_climb_treshold = arr[8];
+	CONFIG.data.zone_0_cut_treshold   = arr[9];
+	CONFIG.data.zone_1_climb_treshold = arr[10];
+	CONFIG.data.zone_1_cut_treshold   = arr[11];
 	mprintf("ok\r\n");
 }
 

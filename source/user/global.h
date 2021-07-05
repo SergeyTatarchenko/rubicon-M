@@ -165,9 +165,13 @@ typedef enum
 #define ZONE_0_F	ADC_VALUES.sign_0
 #define ZONE_1_F	ADC_VALUES.sign_1
 
+#define ZONE_0_C	ADC_VALUES.alrm_0
+#define ZONE_1_C	ADC_VALUES.alrm_1
+
 #define ZONE_0_RELAY_DELAY	2000
 #define ZONE_1_RELAY_DELAY	2000
 
+#define ZONE_CABLE_BREAK_VALUE 2500
 /*----------------------------------------------------------------------*/
 
 extern ADDRESS_TypeDef ADDRESS;

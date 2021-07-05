@@ -66,14 +66,12 @@ BaseType_t Init_()
 	/*usart save murex*/
 	xMutex_serial_BUSY = xSemaphoreCreateMutex();
 	/**/
-	xSemph_state_UPDATE = xSemaphoreCreateCounting( 5, 0 );
+	xSemph_state_UPDATE = xSemaphoreCreateCounting( 1, 0 );
 	
 	zone_0_timer = xTimerCreate("zone 1",ZONE_0_RELAY_DELAY,FALSE,(void*)zone_0_timerID,zone_0_timer_handler);
 	zone_1_timer = xTimerCreate("zone 2",ZONE_1_RELAY_DELAY,FALSE,(void*)zone_1_timerID,zone_1_timer_handler);
 	
-	TaskCreation = xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
-									NULL, MEM_ALLOCATION.user_priority , NULL );
-	TaskCreation &= xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
+	TaskCreation = xTaskCreate(&_task_state_update ,"main routine",MEM_ALLOCATION.stack_user,
 									NULL, MEM_ALLOCATION.user_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_service_serial ,"serial",MEM_ALLOCATION.stack_serial,
 									NULL, MEM_ALLOCATION.serial_priority , NULL );
@@ -81,6 +79,8 @@ BaseType_t Init_()
 									NULL, MEM_ALLOCATION.serial_priority , NULL );
 	TaskCreation &= xTaskCreate(&_task_system_thread ,"system",MEM_ALLOCATION.stack_system,
 									NULL, MEM_ALLOCATION.system_priority , NULL );
+	TaskCreation &= xTaskCreate(&_task_led ,"led",configMINIMAL_STACK_SIZE, 
+									NULL, MEM_ALLOCATION.user_priority , NULL );
 	return TaskCreation;
 }
 

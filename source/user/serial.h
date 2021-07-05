@@ -67,7 +67,7 @@ typedef struct
 {
 	COMMANDS command;
 	ARGUMENTS argument;
-	int values[13];
+	int values[12];
 	int num_of_values;
 	
 }TCmdTypeDef;
