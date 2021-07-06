@@ -21,13 +21,13 @@
 /* enum for ADC channels check function                                 */
 typedef enum
 {
-	S_NORMAL,
-	S_ERROR_ZONE1,
-	S_ERROR_ZONE2,
-	S_ALARM_ZONE1,
-	S_ALARM_ZONE2,
-	S_ALARM_ALL,
-	S_ERROR_ALL
+	S_NORMAL = 0,
+	S_ERROR_ZONE1 = 1,
+	S_ERROR_ZONE2 = 2,
+	S_ALARM_ZONE1 = 4,
+	S_ALARM_ZONE2 = 8,
+	S_ALARM_ALL  = 16,
+	S_ERROR_ALL  = 32
 	
 }DEVICE_STATE_TypeDef;
 
@@ -171,7 +171,7 @@ typedef enum
 #define ZONE_0_RELAY_DELAY	2000
 #define ZONE_1_RELAY_DELAY	2000
 
-#define ZONE_CABLE_BREAK_VALUE 2500
+#define ZONE_CABLE_BREAK_VALUE 2100
 /*----------------------------------------------------------------------*/
 
 extern ADDRESS_TypeDef ADDRESS;
@@ -195,7 +195,7 @@ extern xSemaphoreHandle xSemph_state_UPDATE;
 
 /*----------------------------------------------------------------------*/
 extern DEVICE_MODE mode;
-extern DEVICE_STATE_TypeDef global_state;
+extern uint32_t global_state;
 /*----------------------------------------------------------------------*/
 int CheckTamperPin( void );
 void GetHwAdrState( ADDRESS_TypeDef* state );

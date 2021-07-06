@@ -88,12 +88,11 @@ void TIM2_IRQHandler()
 	               zone_1_cable_break_trigger = FALSE;
 	static uint32_t zone_0_cable_break_counter = 0,
 	                zone_1_cable_break_counter = 0;
-	static DEVICE_STATE_TypeDef local_state = S_NORMAL;
-	/*если значение контроля кабеля 2 секунды > ZONE_CABLE_BREAK_VALUE
+	static uint32_t local_state = (uint32_t)S_NORMAL;
+	/*если значение контроля кабеля 5 секунд > ZONE_CABLE_BREAK_VALUE
 	  тогда сработка ошибки - кабель поврежден.*/
-	static const uint32_t cable_break_overload = 8000;
+	static const uint32_t cable_break_overload = 12000;
 	
-	int zone_trigger = 0;
 	DEVICE_STATE_TypeDef ret_value = S_NORMAL;
 	
 	if(TIM2->SR&TIM_SR_UIF)
@@ -112,22 +111,19 @@ void TIM2_IRQHandler()
 	/*контроль зоны 1*/
 	if(MODE.bit.zone0_enable && zone_0_tigger)
 	{
-		if( ZONE_0_C > ZONE_CABLE_BREAK_VALUE )
+		if( (ZONE_0_C > ZONE_CABLE_BREAK_VALUE) && (zone_0_cable_break_trigger != TRUE) )
 		{
 			zone_0_cable_break_counter++;
 			if(zone_0_cable_break_counter > cable_break_overload)
 			{
 				/*кабель поврежден*/
 				zone_0_cable_break_trigger = TRUE;
-				zone_0_cable_break_counter = 0;
-				local_state = S_ERROR_ZONE1;
 			}
 		}
 		else
 		{
 			zone_0_cable_break_trigger = FALSE;
 			zone_0_cable_break_counter = 0;
-			local_state = S_NORMAL;
 		}
 		if(zone_0_cable_break_trigger != TRUE)
 		{
@@ -140,38 +136,64 @@ void TIM2_IRQHandler()
 			}
 			if(ret_value != S_NORMAL)
 			{
-				local_state = S_ALARM_ZONE1;
+				local_state |= S_ALARM_ZONE1;
 				zone_0_tigger = FALSE;
-				zone_trigger ++;
 			}
 		}
 	}
 	else
 	{
 		zone_0_cable_break_trigger = FALSE;
-		local_state = S_NORMAL;
+		local_state &= ~(uint32_t)(S_ERROR_ZONE1|S_ALARM_ZONE1);
 	}
-
-	
-	if(zone_trigger > 1)
-	{
-		local_state = S_ALARM_ALL;
-	}
-	
 	if(zone_0_cable_break_trigger == TRUE)
 	{
-		local_state = S_ERROR_ZONE1;
+		local_state |= S_ERROR_ZONE1;
+	}
+		/*контроль зоны 2*/
+	if(MODE.bit.zone1_enable && zone_1_tigger)
+	{
+		if( (ZONE_1_C > ZONE_CABLE_BREAK_VALUE) && (zone_1_cable_break_trigger != TRUE) )
+		{
+			zone_1_cable_break_counter++;
+			if(zone_1_cable_break_counter > cable_break_overload)
+			{
+				/*кабель поврежден*/
+				zone_1_cable_break_trigger = TRUE;
+			}
+		}
+		else
+		{
+			zone_1_cable_break_trigger = FALSE;
+			zone_1_cable_break_counter = 0;
+		}
+		if(zone_1_cable_break_trigger != TRUE)
+		{
+			/*триггер прорезания зоны 2*/
+			ret_value = Zone2CutThread(&CONFIG);
+			/*триггер перелаза зоны 2*/
+			if((counter %4 == 0)&&(ret_value == S_NORMAL))
+			{
+				ret_value = Zone2ClimbThread(&CONFIG);
+			}
+			if(ret_value != S_NORMAL)
+			{
+				local_state |= S_ALARM_ZONE2;
+				zone_1_tigger = FALSE;
+			}
+		}
+	}
+	else
+	{
+		zone_1_cable_break_trigger = FALSE;
+		local_state &= ~(uint32_t)(S_ERROR_ZONE2|S_ALARM_ZONE2);
 	}
 	if(zone_1_cable_break_trigger == TRUE)
 	{
-		local_state = S_ERROR_ZONE2;
-	}
-	if((zone_0_cable_break_trigger == TRUE)&&(zone_1_cable_break_trigger == TRUE))
-	{
-		local_state = S_ERROR_ALL;
+		local_state |= S_ERROR_ZONE2;
 	}
 	
-	if(local_state != global_state)
+	if((local_state != global_state) && (mode != ALARM) )
 	{
 		global_state = local_state;
 		/* переключение задачи на _task_system_thread при смене состояния */
@@ -306,85 +328,68 @@ void _task_service_serial(void *pvParameters)
 void _task_system_thread(void *pvParameters)
 {
 	static DEVICE_MODE local_mode = NORMAL;
-	static char debug_arr[32];
-	memset(debug_arr,0,sizeof(debug_arr));
 	while(TRUE)
 	{
 		xSemaphoreTake(xSemph_state_UPDATE,portMAX_DELAY);
 		/* тут управление выходами реле */
 		if(mode != ALARM)
 		{
-			switch(global_state)
+			if(global_state & (uint32_t)S_ALARM_ZONE1)
 			{
-				/*сработка зоны 1*/
-				case S_ALARM_ZONE1:
-					/*вкл. индикацию на светодиод, откл реле на 2с*/
-					led_zone_0_alrm_on;
-					relay_z0_alrm_off;
-					/*добавить занесение триггера в ответное сообщение для КСО*/
-					/*старт таймера возврата реле*/
-					xTimerStart(zone_0_timer, 0);
-					break;
-				/*обрыв кабеля зоны 1*/
-				case S_ERROR_ZONE1:
-					/*вкл. индикацию на светодиод, откл реле ошибки до восстановления */
-					led_zone_0_err_on;
-					relay_z0_err_off;
+				/*вкл. индикацию на светодиод, откл реле на 2с*/
+				led_zone_0_alrm_on;
+				relay_z0_alrm_off;
 				/*добавить занесение триггера в ответное сообщение для КСО*/
-					break;
-				/*сработка зоны 2*/
-				case S_ALARM_ZONE2:
-					/*вкл. индикацию на светодиод, откл реле на 2с*/
-					led_zone_1_alrm_on;
-					relay_z1_alrm_off;
-					/*добавить занесение триггера в ответное сообщение для КСО*/
-					/*старт таймера возврата реле*/
-					xTimerStart(zone_1_timer, 0);
-					break;
-				/*обрыв кабеля зоны 2*/
-				case S_ERROR_ZONE2:
-					/*вкл. индикацию на светодиод, откл реле ошибки до восстановления */
-					led_zone_1_err_on;
-					relay_z1_err_off;
-					/*добавить занесение триггера в ответное сообщение для КСО*/
-					break;
-				/*сработка обоих зон*/
-				case S_ALARM_ALL:
-					led_zone_0_alrm_on;
-					relay_z0_alrm_off;
-					led_zone_1_alrm_on;
-					relay_z1_alrm_off;
-					
-					xTimerStart(zone_0_timer, 0);
-					xTimerStart(zone_1_timer, 0);
-					break;
-				/*обрыв кабеля обоих зон*/
-				case S_ERROR_ALL:
-					relay_z0_err_off;
-					relay_z1_err_off;
-					led_zone_0_err_on;
-					led_zone_1_err_on;
-					break;
-				/*дежурный режим*/
-				case S_NORMAL:
-					/*возврат реле ошибки*/
-					relay_z0_err_on;
-					relay_z1_err_on;
-					led_zone_0_err_off;
-					led_zone_1_err_off;
-					/*возврат в дежурный режим выходов реле сработки */
-					if(local_mode == ALARM)
-					{
-						local_mode = NORMAL;
-						led_zone_0_alrm_off;
-						led_zone_1_alrm_off;
-						
-						relay_z0_alrm_on;
-						relay_z1_alrm_on;
-					}
-					break;
-				default:
-					break;
+				/*старт таймера возврата реле*/
+				xTimerStart(zone_0_timer, 0);
+			}
+			if(global_state & (uint32_t)S_ERROR_ZONE1)
+			{
+				/*вкл. индикацию на светодиод, откл реле ошибки до восстановления */
+				led_zone_0_err_on;
+				relay_z0_err_off;
+			}
+			else
+			{
+				led_zone_0_err_off;
+				relay_z0_err_on;
+			}
+			if(global_state & (uint32_t)S_ALARM_ZONE2)
+			{
+				/*вкл. индикацию на светодиод, откл реле на 2с*/
+				led_zone_1_alrm_on;
+				relay_z1_alrm_off;
+				/*добавить занесение триггера в ответное сообщение для КСО*/
+				/*старт таймера возврата реле*/
+				xTimerStart(zone_1_timer, 0);
+			}
+			if(global_state & (uint32_t)S_ERROR_ZONE2)
+			{
+				/*вкл. индикацию на светодиод, откл реле ошибки до восстановления */
+				led_zone_1_err_on;
+				relay_z1_err_off;
+			}
+			else
+			{
+				led_zone_1_err_off;
+				relay_z1_err_on;
+			}
+			if(global_state == S_NORMAL)
+			{
+				/*возврат реле ошибки*/
+				relay_z0_err_on;
+				relay_z1_err_on;
+				led_zone_0_err_off;
+				led_zone_1_err_off;
+			}
+			/*возврат в дежурный режим выходов реле сработки */
+			if(local_mode == ALARM)
+			{
+				local_mode = NORMAL;
+				led_zone_0_alrm_off;
+				led_zone_1_alrm_off;
+				relay_z0_alrm_on;
+				relay_z1_alrm_on;
 			}
 		}
 		else
@@ -400,9 +405,6 @@ void _task_system_thread(void *pvParameters)
 			led_zone_0_alrm_on;
 			led_zone_1_alrm_on;
 		}
-		sprintf(debug_arr,"state :%d \r\n",global_state);
-		mprintf(debug_arr);
-		memset(debug_arr,0,sizeof(debug_arr));
 		vTaskDelay(100);
 	}
 	

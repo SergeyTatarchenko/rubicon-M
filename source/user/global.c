@@ -21,7 +21,7 @@ xSemaphoreHandle xMutex_serial_BUSY;
 xSemaphoreHandle xSemph_state_UPDATE;
 
 DEVICE_MODE mode = NORMAL;
-DEVICE_STATE_TypeDef global_state = S_NORMAL;
+uint32_t global_state = S_NORMAL;
 
 USART_TypeDef * serial_pointer = USART6;
 /*----------------------------------------------------------------------*/

@@ -592,20 +592,20 @@ void serial_print_address()
 void SetDefConfig()
 {
 	CONFIG.data.zone_0_climb_timeint   = 3;
-	CONFIG.data.zone_0_climb_treshold  = 2000;
-	CONFIG.data.zone_0_climb_triglimit = 5;
+	CONFIG.data.zone_0_climb_treshold  = 2300;
+	CONFIG.data.zone_0_climb_triglimit = 25;
 	
 	CONFIG.data.zone_1_climb_timeint   = 3;
-	CONFIG.data.zone_1_climb_treshold  = 2000;
-	CONFIG.data.zone_1_climb_triglimit = 5;
+	CONFIG.data.zone_1_climb_treshold  = 2300;
+	CONFIG.data.zone_1_climb_triglimit = 25;
 	
 	CONFIG.data.zone_0_cut_timeint   = 3;
-	CONFIG.data.zone_0_cut_treshold  = 2000;
-	CONFIG.data.zone_0_cut_triglimit = 5;
+	CONFIG.data.zone_0_cut_treshold  = 3000;
+	CONFIG.data.zone_0_cut_triglimit = 100;
 	
 	CONFIG.data.zone_1_cut_timeint   = 3;
-	CONFIG.data.zone_1_cut_treshold  = 2000;
-	CONFIG.data.zone_1_cut_triglimit = 5;
+	CONFIG.data.zone_1_cut_treshold  = 3000;
+	CONFIG.data.zone_1_cut_triglimit = 100;
 	
 }
 
